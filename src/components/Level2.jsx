@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Code2,
   Lightbulb,
+  Fingerprint
 } from "lucide-react";
 import he from "he";
 import DetectiveLayout from "./DetectiveLayout";
@@ -13,7 +14,7 @@ import { checkSimilarity } from "../utils/fuzzyMatch";
 import { CONFIG } from "../gameConfig";
 import { CODING_CHALLENGES } from "../data/codingQuestions";
 
-const Level2 = ({ onSolve, timerDisplay, onPenalty }) => {
+const Level2 = ({ onSolve, timerDisplay, onPenalty, onPenaltyAmount }) => {
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [questionData, setQuestionData] = useState(null);
   const [userAnswer, setUserAnswer] = useState("");
@@ -137,6 +138,15 @@ const Level2 = ({ onSolve, timerDisplay, onPenalty }) => {
     e.preventDefault();
     if (!questionData) return;
 
+    // --- INTEGRATED CODE: BLANK SUBMISSION CHECK ---
+    // Requirement: Blank answers should not deduct time
+    if (!userAnswer.trim()) {
+      setFeedback("blank");
+      setTimeout(() => setFeedback(null), 2000);
+      return; // Stop execution without calling onPenalty
+    }
+    // ---------------------------------------------------
+
     // Use tighter fuzzy match for code (90%), looser for trivia (80%)
     const threshold = questionData.type === "code" ? 0.9 : 0.8;
     const isCorrect = checkSimilarity(
@@ -149,7 +159,7 @@ const Level2 = ({ onSolve, timerDisplay, onPenalty }) => {
       setFeedback("success");
       setTimeout(() => {
         const nextIndex = currentQIndex + 1;
-        if (nextIndex >= CONFIG.questionsToSolve) {
+        if (nextIndex >= (CONFIG.questionsToSolve || 10)) {
           onSolve();
           sessionStorage.removeItem("dd_q_index");
         } else {
@@ -162,150 +172,151 @@ const Level2 = ({ onSolve, timerDisplay, onPenalty }) => {
       }, 1000);
     } else {
       setFeedback("error");
+      // Requirement: -30s for incorrect answers
+      const penaltyValue = CONFIG.incorrectPenalty || 30;
+      onPenalty(penaltyValue); 
       setTimeout(() => setFeedback(null), 2000);
     }
   };
 
   const handleSkip = () => {
-    onPenalty(10);
+    // Requirement: -15s for skipped questions
+    const penaltyAmount = CONFIG.skipPenalty || 15;
+    onPenalty(penaltyAmount); 
     fetchQuestion();
     setUserAnswer("");
   };
 
-  const progressPercent = (currentQIndex / CONFIG.questionsToSolve) * 100;
+  const progressPercent = (currentQIndex / (CONFIG.questionsToSolve || 10)) * 100;
 
   return (
     <DetectiveLayout
-      title="Case #002: Data Decryption"
+      title="Timed Interrogation"
       timer={timerDisplay}
-      penalty={onPenalty.currentTotal}
+      penalty={onPenaltyAmount}
     >
-      <div className="space-y-6">
-        {/* Progress Bar */}
-        <div className="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
-          <div
-            className="bg-amber-500 h-full transition-all duration-500"
-            style={{ width: `${progressPercent}%` }}
-          ></div>
-        </div>
-        <div className="flex justify-between text-xs font-bold uppercase text-slate-400">
-          <span>Progress</span>
-          <span>
-            {currentQIndex} / {CONFIG.questionsToSolve} Decrypted
-          </span>
+      <div className="space-y-10">
+        {/* Progress Bar - Revamped for Vintage Theme */}
+        <div className="space-y-2">
+           <div className="flex justify-between text-[10px] font-bold uppercase tracking-[0.2em] text-[#f1e7d0]/50">
+             <span>Transmission Progress</span>
+             <span>Packet {currentQIndex + 1} / {CONFIG.questionsToSolve || 10}</span>
+           </div>
+           <div className="w-full bg-[#121212] h-4 border border-[#f1e7d0]/20 p-1">
+             <div 
+               className="bg-[#4af626] h-full transition-all duration-700 shadow-[0_0_10px_#4af626]" 
+               style={{ width: `${progressPercent}%` }}
+             ></div>
+           </div>
         </div>
 
-        {/* Question Card */}
-        <div className="bg-white text-slate-900 rounded-xl p-6 shadow-sm border-l-4 border-amber-500 relative min-h-[220px] flex flex-col justify-center">
+        {/* Question Card - Dossier Style */}
+        <div className="relative border-l-4 border-[#4af626] pl-8 py-2 min-h-[220px]">
           {loading ? (
-            <div className="flex items-center gap-3 text-slate-400 animate-pulse justify-center">
-              <RefreshCw className="animate-spin" /> Fetching encrypted
-              packet...
+            <div className="flex items-center gap-4 text-[#4af626] animate-pulse italic">
+              <RefreshCw className="animate-spin" size={20} />
+              <span>DECRYPTING DATA PACKET...</span>
             </div>
           ) : (
-            <div className="animate-fade-in-up">
-              <div className="absolute top-4 right-4 opacity-10">
-                {questionData.type === "code" ? (
-                  <Code2 size={60} />
-                ) : (
-                  <BrainCircuit size={60} />
-                )}
+            <div className="animate-fade-in-up space-y-6">
+              <div className="flex items-center gap-3 opacity-50">
+                <Fingerprint size={16} />
+                <span className="text-[10px] font-bold uppercase tracking-widest">
+                  Evidence_Source: {questionData.type === "code" ? "Compiler_Logs" : "Intel_Database"}
+                </span>
               </div>
 
-              <h3 className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
-                {questionData.type === "code"
-                  ? "Code Analysis Required"
-                  : "Security Question"}
-              </h3>
-
-              <p className="text-xl font-medium leading-snug pr-8 mb-4">
+              <p className="text-2xl md:text-3xl font-bold leading-tight text-[#f1e7d0] drop-shadow-sm">
                 {questionData.question}
               </p>
 
-              {/* Code Snippet Display */}
+              {/* Code Snippet Display - Matrix Style */}
               {questionData.codeSnippet && (
-                <div className="bg-slate-900 text-green-400 font-mono p-4 rounded-lg text-sm md:text-base border-l-4 border-green-500 shadow-inner mb-4 overflow-x-auto">
-                  <pre>{questionData.codeSnippet}</pre>
+                <div className="bg-[#0a0a0a] p-6 border border-[#f1e7d0]/10 rounded-sm overflow-x-auto shadow-inner">
+                  <pre className="text-[#4af626] font-mono text-sm leading-relaxed whitespace-pre-wrap">
+                    <code>{questionData.codeSnippet}</code>
+                  </pre>
                 </div>
               )}
             </div>
           )}
         </div>
 
-        {/* Answer Section */}
-        <div className="space-y-4">
-          <form onSubmit={handleSubmit}>
-            <label className="block text-sm font-medium text-slate-400 mb-2">
-              {questionData?.type === "code"
-                ? "Enter Output / Missing Code"
-                : "Decryption Key"}
-            </label>
+        {/* Answer Section - Terminal Prompt Revamp */}
+        <div className="pt-6 border-t border-[#f1e7d0]/10">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="group">
+              <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-[#f1e7d0]/40 mb-3 group-focus-within:text-[#4af626] transition-colors">
+                {">"} input_decryption_key
+              </label>
 
-            <div className="relative">
-              <input
-                type="text"
-                value={userAnswer}
-                onChange={(e) => setUserAnswer(e.target.value)}
-                placeholder="Type answer here..."
-                autoFocus
-                className={`w-full p-4 pl-4 pr-12 rounded-lg bg-slate-900 border-2 text-lg text-white placeholder:text-slate-600 focus:outline-none transition-all ${
-                  feedback === "error"
-                    ? "border-red-500 animate-shake"
-                    : feedback === "success"
-                    ? "border-green-500"
-                    : "border-slate-700 focus:border-amber-500"
-                }`}
-              />
-              {feedback === "success" && (
-                <CheckCircle2 className="absolute right-4 top-4 text-green-500 animate-bounce" />
-              )}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={userAnswer}
+                  onChange={(e) => setUserAnswer(e.target.value)}
+                  placeholder="........"
+                  autoFocus
+                  className={`w-full bg-transparent border-b-2 p-0 pb-2 text-3xl font-bold transition-all focus:outline-none ${
+                    feedback === "error"
+                      ? "border-red-500 text-red-500 animate-shake"
+                      : feedback === "success"
+                      ? "border-[#4af626] text-[#4af626]"
+                      : "border-[#f1e7d0]/20 focus:border-[#4af626] text-[#f1e7d0] placeholder:text-[#f1e7d0]/10"
+                  }`}
+                />
+                {feedback === "success" && (
+                  <CheckCircle2 className="absolute right-0 top-0 text-[#4af626] animate-bounce" />
+                )}
+              </div>
             </div>
 
             {/* Actions Bar */}
-            <div className="flex flex-wrap justify-between items-center mt-4 gap-3">
-              <div className="flex gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+              <div className="flex gap-6">
                 <button
                   type="button"
                   onClick={handleSkip}
-                  className="text-slate-500 text-sm hover:text-white flex items-center gap-1 transition-colors"
+                  className="text-[#f1e7d0]/40 hover:text-red-500 text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors"
                 >
-                  <RefreshCw size={14} /> Skip (+10s)
+                  <RefreshCw size={12} /> Skip_Packet (-{CONFIG.skipPenalty || 15}s)
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setShowHint(!showHint)}
-                  className="text-amber-500 text-sm hover:text-amber-400 flex items-center gap-1 transition-colors"
+                  className="text-[#4af626]/60 hover:text-[#4af626] text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors"
                 >
-                  <Lightbulb size={14} />{" "}
-                  {showHint ? "Hide Hint" : "Need a Hint?"}
+                  <Lightbulb size={12} /> {showHint ? "Hide_Intel" : "Access_Hint"}
                 </button>
               </div>
 
               <button
                 type="submit"
                 disabled={loading || feedback === "success"}
-                className="bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-900 font-bold py-3 px-8 rounded-lg shadow-lg hover:shadow-amber-500/20 transition-all flex-1 md:flex-none"
+                className="w-full md:w-auto bg-[#f1e7d0] hover:bg-[#4af626] disabled:opacity-30 text-[#0d0d0d] px-12 py-4 font-black uppercase tracking-tighter transition-all hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(74,246,38,0.3)]"
               >
-                {feedback === "success" ? "Decrypting..." : "Submit"}
+                {feedback === "success" ? "TRANSMITTING..." : "Execute_Decrypt"}
               </button>
             </div>
           </form>
 
-          {/* Hint Display */}
+          {/* Messages & Overlays */}
           {showHint && questionData?.hint && (
-            <div className="bg-amber-900/20 border border-amber-500/30 p-3 rounded-lg text-amber-200 text-sm animate-fade-in-up flex gap-2 items-start">
-              <Lightbulb size={16} className="mt-0.5 shrink-0" />
-              <span>
-                <strong>Hint:</strong> {questionData.hint}
-              </span>
+            <div className="mt-6 p-4 bg-[#4af626]/5 border border-[#4af626]/20 text-[#4af626] text-xs italic animate-fade-in-up">
+              <strong>ENCRYPTED_HINT:</strong> {questionData.hint}
             </div>
           )}
 
           {feedback === "error" && (
-            <div className="flex items-center gap-2 text-red-400 bg-red-900/20 p-3 rounded border border-red-500/30">
-              <AlertTriangle size={18} />
-              <span>Incorrect. Access Denied.</span>
+            <div className="mt-6 p-4 border-2 border-red-500 text-red-500 text-xs font-bold uppercase tracking-widest">
+              ACCESS_DENIED: Incorrect_Input_Sequence.
+            </div>
+          )}
+
+          {feedback === "blank" && (
+            <div className="mt-6 p-4 border-2 border-amber-500/50 text-amber-500 text-xs font-bold uppercase tracking-widest animate-pulse">
+              SYSTEM_WARNING: Field_Required. Proceed_Prevented.
             </div>
           )}
         </div>
