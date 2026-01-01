@@ -218,7 +218,7 @@ const Level2 = ({ onSolve, timerDisplay, onPenalty, onPenaltyAmount }) => {
               <span>DECRYPTING DATA PACKET...</span>
             </div>
           ) : (
-            <div className="animate-fade-in-up space-y-6">
+            <div className="animate-fade-in-up space-y-6 text-left">
               <div className="flex items-center gap-3 opacity-50">
                 <Fingerprint size={16} />
                 <span className="text-[10px] font-bold uppercase tracking-widest">
@@ -245,7 +245,7 @@ const Level2 = ({ onSolve, timerDisplay, onPenalty, onPenaltyAmount }) => {
         {/* Answer Section - Terminal Prompt Revamp */}
         <div className="pt-6 border-t border-[#f1e7d0]/10">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="group">
+            <div className="group text-left">
               <label className="block text-[10px] font-bold uppercase tracking-[0.3em] text-[#f1e7d0]/40 mb-3 group-focus-within:text-[#4af626] transition-colors">
                 {">"} input_decryption_key
               </label>
@@ -303,19 +303,19 @@ const Level2 = ({ onSolve, timerDisplay, onPenalty, onPenaltyAmount }) => {
 
           {/* Messages & Overlays */}
           {showHint && questionData?.hint && (
-            <div className="mt-6 p-4 bg-[#4af626]/5 border border-[#4af626]/20 text-[#4af626] text-xs italic animate-fade-in-up">
+            <div className="mt-6 p-4 bg-[#4af626]/5 border border-[#4af626]/20 text-[#4af626] text-xs italic animate-fade-in-up text-left">
               <strong>ENCRYPTED_HINT:</strong> {questionData.hint}
             </div>
           )}
 
           {feedback === "error" && (
-            <div className="mt-6 p-4 border-2 border-red-500 text-red-500 text-xs font-bold uppercase tracking-widest">
+            <div className="mt-6 p-4 border-2 border-red-500 text-red-500 text-xs font-bold uppercase tracking-widest text-left">
               ACCESS_DENIED: Incorrect_Input_Sequence.
             </div>
           )}
 
           {feedback === "blank" && (
-            <div className="mt-6 p-4 border-2 border-amber-500/50 text-amber-500 text-xs font-bold uppercase tracking-widest animate-pulse">
+            <div className="mt-6 p-4 border-2 border-amber-500/50 text-amber-500 text-xs font-bold uppercase tracking-widest animate-pulse text-left">
               SYSTEM_WARNING: Field_Required. Proceed_Prevented.
             </div>
           )}
