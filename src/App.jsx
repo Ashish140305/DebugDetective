@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Level1 from "./components/Level1";
 import Level2 from "./components/Level2";
 import Level3 from "./components/Level3";
@@ -9,8 +9,8 @@ function App() {
   const [isActive, setIsActive] = useState(false);
   const [penaltySeconds, setPenaltySeconds] = useState(0);
 
-  // --- INTEGRATED: COUNTDOWN & DISQUALIFICATION ---
-  const [timeLeft, setTimeLeft] = useState(1500); // 25 Minutes (1500s)
+  // --- COUNTDOWN & DISQUALIFICATION ---
+  const [timeLeft, setTimeLeft] = useState(1500); // 25 Minutes
   const [isDisqualified, setIsDisqualified] = useState(false);
 
   useEffect(() => {
@@ -39,10 +39,8 @@ function App() {
 
   const handlePenalty = (amount) => {
     setSeconds((s) => s + amount);
-    // Apply penalty to the countdown timer
     setTimeLeft((prev) => Math.max(0, prev - amount));
     setPenaltySeconds(amount);
-    // Clear the visual penalty indicator after 3 seconds
     setTimeout(() => setPenaltySeconds(0), 3000);
   };
 
@@ -56,17 +54,21 @@ function App() {
 
   return (
     <>
-      {/* DISQUALIFICATION OVERLAY */}
+      {/* SIMPLE DISQUALIFICATION MODAL */}
       {isDisqualified && (
-        <div className="fixed inset-0 z-[9999] bg-slate-950 flex items-center justify-center p-6 text-center animate-fade-in">
-          <div className="border-2 border-red-500 bg-red-500/10 p-10 rounded-2xl max-w-lg shadow-[0_0_50px_rgba(239,68,68,0.2)]">
-            <h1 className="text-5xl font-black text-red-500 mb-4 tracking-tighter">DISQUALIFIED</h1>
-            <p className="text-slate-300 text-lg mb-8">SECURITY BREACH: You failed to complete the investigation within the allotted time.</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-lg transition-all"
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white p-8 rounded-xl shadow-xl max-w-md w-full text-center">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Time Expired
+            </h1>
+            <p className="text-gray-600 mb-6">
+              You failed to complete the tasks within the time limit.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg w-full transition-colors"
             >
-              RESTART SESSION
+              Restart
             </button>
           </div>
         </div>

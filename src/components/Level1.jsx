@@ -6,19 +6,19 @@ import { CONFIG } from "../gameConfig";
 const Level1 = ({ onUnlock, onUserLogin }) => {
   const [pin, setPin] = useState("");
   const [error, setError] = useState(false);
-
-  // --- INTEGRATED CODE: LOGIN STATE & CHALLENGE DATA ---
   const [username, setUsername] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [caseData, setCaseData] = useState(null);
 
-  // Initialize a random case from the password pool
   useEffect(() => {
     if (CONFIG.passwordPool) {
-      const randomCase = CONFIG.passwordPool[Math.floor(Math.random() * CONFIG.passwordPool.length)];
+      const randomCase =
+        CONFIG.passwordPool[
+          Math.floor(Math.random() * CONFIG.passwordPool.length)
+        ];
       setCaseData({
         ...randomCase,
-        shuffledHints: [...randomCase.hints].sort(() => Math.random() - 0.5)
+        shuffledHints: [...randomCase.hints].sort(() => Math.random() - 0.5),
       });
     }
   }, []);
@@ -30,14 +30,11 @@ const Level1 = ({ onUnlock, onUserLogin }) => {
       setIsLoggedIn(true);
     }
   };
-  // -----------------------------------------
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // Check against the dynamic password from the pool
-    const isCorrect = caseData 
-      ? pin.toUpperCase() === caseData.password.toUpperCase() 
+    const isCorrect = caseData
+      ? pin.toUpperCase() === caseData.password.toUpperCase()
       : pin === CONFIG.unlockPin;
 
     if (isCorrect) {
@@ -49,26 +46,29 @@ const Level1 = ({ onUnlock, onUserLogin }) => {
     }
   };
 
-  // --- PHASE 0: INITIALIZE SESSION ---
   if (!isLoggedIn) {
     return (
-      <DetectiveLayout title="Initialize Session">
-        <div className="space-y-6 py-4">
-          <div className="flex items-center gap-4 border-l-4 border-amber-500 pl-4 bg-slate-900/50 p-4 rounded text-left">
-            <User className="text-amber-500 shrink-0" size={24} />
-            <p className="text-slate-300">Enter Agent Username to begin the evaluation session and decrypt the local terminal.</p>
+      <DetectiveLayout title="Welcome">
+        <div className="max-w-md mx-auto text-center space-y-6">
+          <div className="bg-blue-50 p-4 rounded-full inline-block">
+            <User className="text-blue-600" size={32} />
           </div>
+          <h2 className="text-xl font-semibold">Please Identify Yourself</h2>
+
           <form onSubmit={handleLogin} className="space-y-4">
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Agent Name / ID"
-              className="w-full bg-slate-100 text-slate-900 text-lg px-4 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-amber-500/30 font-bold"
+              placeholder="Enter your name"
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
               autoFocus
             />
-            <button type="submit" className="w-full bg-amber-500 text-slate-900 font-bold py-3 rounded-lg hover:bg-amber-400 transition-all shadow-lg">
-              Initialize Session
+            <button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors"
+            >
+              Start Session
             </button>
           </form>
         </div>
@@ -76,30 +76,24 @@ const Level1 = ({ onUnlock, onUserLogin }) => {
     );
   }
 
-  // --- PHASE 1: ACCESS CONTROL / PASSWORD DISCOVERY ---
   return (
-    <DetectiveLayout title="Case #001: Access Control">
-      <div className="flex flex-col md:flex-row gap-8 items-center">
-        <div className="w-full md:w-1/3 flex justify-center">
-          <div className={`p-8 rounded-full bg-slate-700/50 ${error ? "animate-shake text-red-400" : "text-amber-500"}`}>
-            <FolderLock size={64} />
-          </div>
+    <DetectiveLayout title="Level 1: Password Challenge">
+      <div className="flex flex-col md:flex-row gap-8">
+        <div className="md:w-1/3 flex items-start justify-center pt-4">
+          <FolderLock
+            size={80}
+            className={`${error ? "text-red-500" : "text-gray-400"}`}
+          />
         </div>
 
-        <div className="w-full md:w-2/3 space-y-6 text-left">
-          <div>
-            <h3 className="text-xl font-semibold text-white">Password Discovery Challenge</h3>
-            <p className="text-slate-400 mt-1">Welcome, Agent <strong>{username}</strong>. Deduce the password using the decrypted hints below.</p>
-          </div>
-
-          {/* Intelligence Hints from the Pool */}
-          <div className="bg-slate-900 p-4 rounded-lg border border-slate-700 space-y-3">
-            <h4 className="text-amber-500 text-xs font-bold uppercase flex items-center gap-2">
-              <Lightbulb size={14} /> Intelligence Hints
-            </h4>
-            <ul className="space-y-2">
+        <div className="md:w-2/3 space-y-6">
+          <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg">
+            <div className="flex items-center gap-2 text-blue-800 font-bold mb-2">
+              <Lightbulb size={18} /> Hints
+            </div>
+            <ul className="list-disc list-inside space-y-1 text-blue-900">
               {caseData?.shuffledHints.map((hint, i) => (
-                <li key={i} className="text-slate-300 text-sm italic">"{hint}"</li>
+                <li key={i}>{hint}</li>
               ))}
             </ul>
           </div>
@@ -109,16 +103,27 @@ const Level1 = ({ onUnlock, onUserLogin }) => {
               type="text"
               value={pin}
               onChange={(e) => setPin(e.target.value)}
-              placeholder="Enter Deducted Password"
-              className="w-full bg-slate-100 text-slate-900 placeholder:text-slate-400 text-lg px-4 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-amber-500/30 font-bold tracking-widest transition-all"
+              placeholder="Enter Password"
+              className={`w-full border-2 rounded-lg px-4 py-3 text-lg font-bold outline-none transition-all ${
+                error
+                  ? "border-red-300 bg-red-50"
+                  : "border-gray-200 focus:border-blue-500"
+              }`}
               autoFocus
             />
-            <button type="submit" className="absolute right-2 top-2 bottom-2 bg-slate-900 hover:bg-slate-800 text-white px-4 rounded-md transition-colors flex items-center">
+            <button
+              type="submit"
+              className="absolute right-2 top-2 bottom-2 bg-gray-900 text-white px-4 rounded-md hover:bg-gray-800 transition-colors"
+            >
               <ArrowRight size={20} />
             </button>
           </form>
 
-          {error && <p className="text-red-400 text-sm font-medium">Authentication Failed. Re-analyze hints.</p>}
+          {error && (
+            <p className="text-red-500 font-medium">
+              Incorrect password. Try again.
+            </p>
+          )}
         </div>
       </div>
     </DetectiveLayout>

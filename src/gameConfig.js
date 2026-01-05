@@ -1,5 +1,9 @@
 export const CONFIG = {
   pcId: "PC-01",
+
+  // --- NEW: SYSTEM LOGIN CONFIG ---
+  systemLoginPassword: "admin", // The password required to enter the app
+
   // Phase 1: Detective Password Discovery Challenge
   passwordPool: [
     {
@@ -16,9 +20,9 @@ export const CONFIG = {
     }
   ],
   // Phase 2: Interrogation Mechanics
-  questionsToSolve: 10, // Requirement: 10 correctly answered questions
-  incorrectPenalty: 30, // Requirement: -30s for incorrect answers
-  skipPenalty: 15,      // Requirement: -15s for skipped questions
+  questionsToSolve: 10,
+  incorrectPenalty: 30,
+  skipPenalty: 15,
   // Phase 3
   researchTopics: [
     "APIs and Web Architecture",
