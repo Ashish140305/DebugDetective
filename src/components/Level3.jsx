@@ -4,7 +4,7 @@ import { Trophy, Send, Check } from "lucide-react";
 import DetectiveLayout from "./DetectiveLayout";
 import { CONFIG } from "../gameConfig";
 
-const Level3 = ({ finalTime, onReset }) => {
+const Level3 = ({ finalTime, onAdminReset }) => {
   const [topic, setTopic] = useState("");
   const [report, setReport] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -18,41 +18,46 @@ const Level3 = ({ finalTime, onReset }) => {
   }, []);
 
   return (
-    <DetectiveLayout title="Mission Complete">
+    <DetectiveLayout
+      title="Mission Complete"
+      onAdminReset={onAdminReset} // <--- Passed to Layout
+    >
       {!submitted && <Confetti recycle={false} numberOfPieces={300} />}
 
       <div className="text-center space-y-6">
         <div className="flex flex-col items-center">
-          <div className="bg-green-100 p-4 rounded-full text-green-600 mb-4">
+          <div className="bg-green-100 dark:bg-green-900/30 p-4 rounded-full text-green-600 dark:text-green-400 mb-4">
             <Trophy size={40} />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             All Systems Unlocked
           </h2>
-          <p className="text-gray-500">
+          <p className="text-gray-500 dark:text-gray-400">
             Completed in{" "}
-            <span className="font-mono font-bold text-gray-900">
+            <span className="font-mono font-bold text-gray-900 dark:text-white">
               {finalTime}
             </span>
           </p>
         </div>
 
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-left">
+        <div className="bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg p-6 text-left">
           <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
             Final Assignment
           </span>
-          <h3 className="text-xl font-bold text-gray-900 mt-1 mb-4">{topic}</h3>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-1 mb-4">
+            {topic}
+          </h3>
 
           {!submitted ? (
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 Please provide a brief outline of the topic above:
               </p>
               <textarea
                 value={report}
                 onChange={(e) => setReport(e.target.value)}
                 placeholder="Write your outline here..."
-                className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                className="w-full h-32 p-3 border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
               />
               <button
                 onClick={() => setSubmitted(true)}
@@ -64,10 +69,10 @@ const Level3 = ({ finalTime, onReset }) => {
             </div>
           ) : (
             <div className="text-center py-8">
-              <div className="inline-flex items-center gap-2 text-green-600 font-bold text-lg mb-4">
+              <div className="inline-flex items-center gap-2 text-green-600 dark:text-green-400 font-bold text-lg mb-4">
                 <Check size={24} /> Report Submitted
               </div>
-              <p className="text-gray-500 text-sm">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 Thank you for your participation.
               </p>
             </div>

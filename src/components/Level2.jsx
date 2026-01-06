@@ -13,7 +13,13 @@ import { checkSimilarity } from "../utils/fuzzyMatch";
 import { CONFIG } from "../gameConfig";
 import { CODING_CHALLENGES } from "../data/codingQuestions";
 
-const Level2 = ({ onSolve, timerDisplay, onPenalty, onPenaltyAmount }) => {
+const Level2 = ({
+  onSolve,
+  timerDisplay,
+  onPenalty,
+  onPenaltyAmount,
+  onAdminReset,
+}) => {
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [questionData, setQuestionData] = useState(null);
   const [userAnswer, setUserAnswer] = useState("");
@@ -21,7 +27,7 @@ const Level2 = ({ onSolve, timerDisplay, onPenalty, onPenaltyAmount }) => {
   const [feedback, setFeedback] = useState(null);
   const [showHint, setShowHint] = useState(false);
 
-  // --- LOGGING Logic (Same as before) ---
+  // --- LOGGING Logic ---
   const logToConsole = (q, a, type = "NEW") => {
     const timestamp = new Date().toLocaleTimeString();
     const logEntry = `[${timestamp}] [${type}] \nQ: ${q} \nA: ${a}`;
@@ -43,7 +49,7 @@ const Level2 = ({ onSolve, timerDisplay, onPenalty, onPenaltyAmount }) => {
     if (history.length > 0) history.forEach((entry) => console.log(entry));
   }, []);
 
-  // --- FETCH Logic (Same as before) ---
+  // --- FETCH Logic ---
   const fetchQuestion = async () => {
     setLoading(true);
     setShowHint(false);
@@ -88,6 +94,7 @@ const Level2 = ({ onSolve, timerDisplay, onPenalty, onPenaltyAmount }) => {
           logToConsole(cleanQ, cleanA, `TRIVIA Q (${currentQIndex + 1})`);
         }
       } catch (error) {
+        // Fallback
         const fallback = CODING_CHALLENGES[0];
         setQuestionData(fallback);
       }
@@ -104,10 +111,12 @@ const Level2 = ({ onSolve, timerDisplay, onPenalty, onPenaltyAmount }) => {
         sessionStorage.removeItem("dd_page_refreshed");
       }
     }
-    window.addEventListener("beforeunload", () =>
-      sessionStorage.setItem("dd_page_refreshed", "true")
-    );
+    const handleUnload = () =>
+      sessionStorage.setItem("dd_page_refreshed", "true");
+    window.addEventListener("beforeunload", handleUnload);
     fetchQuestion();
+
+    return () => window.removeEventListener("beforeunload", handleUnload);
   }, []);
 
   const handleSubmit = (e) => {
@@ -162,17 +171,18 @@ const Level2 = ({ onSolve, timerDisplay, onPenalty, onPenaltyAmount }) => {
       title="Level 2: Investigation"
       timer={timerDisplay}
       penalty={onPenaltyAmount}
+      onAdminReset={onAdminReset} // <--- Passed to Layout
     >
       <div className="space-y-8">
-        {/* Simple Progress Bar */}
+        {/* Progress Bar */}
         <div>
-          <div className="flex justify-between text-sm text-gray-500 mb-2 font-medium">
+          <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-2 font-medium">
             <span>Progress</span>
             <span>
               {currentQIndex} / {totalQ} Solved
             </span>
           </div>
-          <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
+          <div className="w-full bg-gray-200 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
             <div
               className="bg-blue-600 h-full transition-all duration-500"
               style={{ width: `${progressPercent}%` }}
@@ -188,7 +198,7 @@ const Level2 = ({ onSolve, timerDisplay, onPenalty, onPenaltyAmount }) => {
             </div>
           ) : (
             <div className="animate-fade-in space-y-4">
-              <div className="flex items-center gap-2 text-gray-500 text-sm font-semibold uppercase tracking-wider">
+              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm font-semibold uppercase tracking-wider">
                 {questionData.type === "code" ? (
                   <Code2 size={16} />
                 ) : (
@@ -199,12 +209,12 @@ const Level2 = ({ onSolve, timerDisplay, onPenalty, onPenaltyAmount }) => {
                   : "Technical Trivia"}
               </div>
 
-              <h3 className="text-xl md:text-2xl font-bold text-gray-900 leading-snug">
+              <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white leading-snug">
                 {questionData.question}
               </h3>
 
               {questionData.codeSnippet && (
-                <div className="bg-gray-100 p-4 rounded-lg border border-gray-200 font-mono text-sm text-gray-800 overflow-x-auto">
+                <div className="bg-gray-100 dark:bg-slate-900 p-4 rounded-lg border border-gray-200 dark:border-slate-700 font-mono text-sm text-gray-800 dark:text-gray-200 overflow-x-auto">
                   <pre>{questionData.codeSnippet}</pre>
                 </div>
               )}
@@ -213,7 +223,7 @@ const Level2 = ({ onSolve, timerDisplay, onPenalty, onPenaltyAmount }) => {
         </div>
 
         {/* Answer Input */}
-        <div className="border-t border-gray-100 pt-6">
+        <div className="border-t border-gray-100 dark:border-slate-700 pt-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="relative">
               <input
@@ -222,12 +232,12 @@ const Level2 = ({ onSolve, timerDisplay, onPenalty, onPenaltyAmount }) => {
                 onChange={(e) => setUserAnswer(e.target.value)}
                 placeholder="Type your answer here..."
                 autoFocus
-                className={`w-full text-lg px-4 py-3 border-2 rounded-lg outline-none transition-all ${
+                className={`w-full text-lg px-4 py-3 border-2 rounded-lg outline-none transition-all dark:bg-slate-900 dark:text-white ${
                   feedback === "error"
-                    ? "border-red-500 bg-red-50"
+                    ? "border-red-500 bg-red-50 dark:bg-red-900/20"
                     : feedback === "success"
-                    ? "border-green-500 bg-green-50"
-                    : "border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-50"
+                    ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                    : "border-gray-300 dark:border-slate-600 focus:border-blue-500"
                 }`}
               />
               {feedback === "success" && (
@@ -235,7 +245,7 @@ const Level2 = ({ onSolve, timerDisplay, onPenalty, onPenaltyAmount }) => {
               )}
             </div>
 
-            {/* Hint & Skip */}
+            {/* Actions */}
             <div className="flex items-center justify-between">
               <div className="flex gap-4">
                 <button
@@ -248,7 +258,7 @@ const Level2 = ({ onSolve, timerDisplay, onPenalty, onPenaltyAmount }) => {
                 <button
                   type="button"
                   onClick={() => setShowHint(!showHint)}
-                  className="text-sm font-medium text-blue-500 hover:text-blue-700 transition-colors flex items-center gap-1"
+                  className="text-sm font-medium text-blue-500 hover:text-blue-700 dark:text-blue-400 transition-colors flex items-center gap-1"
                 >
                   <Lightbulb size={14} />{" "}
                   {showHint ? "Hide Hint" : "Need Hint?"}
@@ -265,13 +275,13 @@ const Level2 = ({ onSolve, timerDisplay, onPenalty, onPenaltyAmount }) => {
           </form>
 
           {showHint && questionData?.hint && (
-            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md text-sm">
+            <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200 rounded-md text-sm">
               <strong>Hint:</strong> {questionData.hint}
             </div>
           )}
 
           {feedback === "error" && (
-            <div className="mt-2 text-red-600 text-sm font-medium">
+            <div className="mt-2 text-red-600 dark:text-red-400 text-sm font-medium">
               Incorrect answer. Time penalty applied.
             </div>
           )}

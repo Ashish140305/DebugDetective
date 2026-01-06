@@ -5,27 +5,21 @@ import Level1 from "./components/Level1";
 import Level2 from "./components/Level2";
 import Level3 from "./components/Level3";
 import ResumeModal from "./components/ResumeModal";
+// ThemeProvider is now in main.jsx
 
 function App() {
-  // --- APP STATE ---
-  // 'LOGIN' | 'SETUP' | 'GAME'
   const [appState, setAppState] = useState("LOGIN");
   const [level, setLevel] = useState(1);
-  const [isLocked, setIsLocked] = useState(false); // Refresh Lock
-
-  // --- TIMER STATE ---
+  const [isLocked, setIsLocked] = useState(false);
   const [timeLeft, setTimeLeft] = useState(1500); // 25 Mins
   const [isActive, setIsActive] = useState(false);
   const [penaltySeconds, setPenaltySeconds] = useState(0);
   const [isDisqualified, setIsDisqualified] = useState(false);
 
-  // --- INITIALIZATION ---
   useEffect(() => {
     const configured = localStorage.getItem("dd_game_configured");
-
     if (configured) {
       setAppState("GAME");
-      // Check if user refreshed while game was active
       if (sessionStorage.getItem("dd_session_active")) {
         setIsLocked(true);
       }
@@ -34,7 +28,6 @@ function App() {
     }
   }, []);
 
-  // --- TIMER LOGIC ---
   useEffect(() => {
     let countdownInterval = null;
     if (isActive && timeLeft > 0 && !isLocked) {
@@ -48,23 +41,15 @@ function App() {
     return () => clearInterval(countdownInterval);
   }, [isActive, timeLeft, isLocked]);
 
-  // --- HANDLERS ---
-
   const handleAdminReset = () => {
-    // 1. Verify Identity (Simple PIN check using Resume PIN for quick reset)
-    // Or clear everything and force full login. Let's do full clear for safety.
-    const pin = prompt(
-      "Enter Resume PIN to Reset Game, or type 'RESET' to force full logout:"
-    );
-    const savedPin = localStorage.getItem("dd_resume_pin");
+    localStorage.removeItem("dd_game_configured");
+    localStorage.removeItem("dd_pc_id");
+    localStorage.removeItem("dd_l1_ans");
+    localStorage.removeItem("dd_resume_pin");
+    sessionStorage.removeItem("dd_session_active");
 
-    if (pin === savedPin || pin === "RESET") {
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.reload(); // Hard refresh to clear all states
-    } else {
-      alert("Invalid PIN.");
-    }
+    // Hard refresh to reload state
+    window.location.reload();
   };
 
   const handlePenalty = (amount) => {
@@ -82,85 +67,77 @@ function App() {
   };
 
   // --- RENDERING ---
-
-  // 1. LOGIN SCREEN
-  if (appState === "LOGIN") {
-    return <AdminLogin onLoginSuccess={() => setAppState("SETUP")} />;
-  }
-
-  // 2. SETUP SCREEN
-  if (appState === "SETUP") {
-    return (
-      <AdminSetup
-        onSetupComplete={() => {
-          setAppState("GAME");
-          sessionStorage.setItem("dd_session_active", "true");
-        }}
-      />
-    );
-  }
-
-  // 3. GAME INTERFACE
   return (
-    <div className="bg-gray-50 min-h-screen">
-      {/* SECURITY LOCK (On Refresh) */}
-      {isLocked && <ResumeModal onResume={() => setIsLocked(false)} />}
-
-      {/* DISQUALIFICATION SCREEN */}
-      {isDisqualified && (
-        <div className="fixed inset-0 z-50 bg-gray-900 flex items-center justify-center p-6 text-center animate-fade-in">
-          <div className="bg-white p-10 rounded-xl max-w-lg shadow-2xl">
-            <h1 className="text-4xl font-black text-red-600 mb-4">
-              Time Expired
-            </h1>
-            <p className="text-gray-600 text-lg mb-8">
-              You failed to complete the investigation in time.
-            </p>
-            <button
-              onClick={handleAdminReset}
-              className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg transition-all"
-            >
-              Reset Terminal
-            </button>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300 text-gray-900 dark:text-gray-100 font-sans">
+      {appState === "LOGIN" && (
+        <AdminLogin onLoginSuccess={() => setAppState("SETUP")} />
       )}
 
-      {/* ACTIVE LEVELS */}
-      {!isLocked && !isDisqualified && (
+      {appState === "SETUP" && (
+        <AdminSetup
+          onSetupComplete={() => {
+            setAppState("GAME");
+            sessionStorage.setItem("dd_session_active", "true");
+          }}
+        />
+      )}
+
+      {appState === "GAME" && (
         <>
-          {level === 1 && (
-            <Level1
-              onUnlock={() => {
-                setLevel(2);
-                setIsActive(true);
-              }}
-            />
+          {isLocked && <ResumeModal onResume={() => setIsLocked(false)} />}
+
+          {isDisqualified && (
+            <div className="fixed inset-0 z-50 bg-gray-900 flex items-center justify-center p-6 text-center animate-fade-in">
+              <div className="bg-white dark:bg-slate-800 p-10 rounded-xl max-w-lg shadow-2xl border border-gray-200 dark:border-slate-700">
+                <h1 className="text-4xl font-black text-red-600 mb-4">
+                  Time Expired
+                </h1>
+                <p className="text-gray-600 dark:text-gray-300 text-lg mb-8">
+                  You failed to complete the investigation in time.
+                </p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg transition-all"
+                >
+                  Reset Terminal
+                </button>
+              </div>
+            </div>
           )}
 
-          {level === 2 && (
-            <Level2
-              onSolve={() => {
-                setIsActive(false);
-                setLevel(3);
-              }}
-              timerDisplay={formatTime()}
-              onPenalty={handlePenalty}
-              onPenaltyAmount={penaltySeconds}
-            />
+          {!isLocked && !isDisqualified && (
+            <>
+              {level === 1 && (
+                <Level1
+                  onUnlock={() => {
+                    setLevel(2);
+                    setIsActive(true);
+                  }}
+                  onAdminReset={handleAdminReset}
+                />
+              )}
+              {level === 2 && (
+                <Level2
+                  onSolve={() => {
+                    setIsActive(false);
+                    setLevel(3);
+                  }}
+                  timerDisplay={formatTime()}
+                  onPenalty={handlePenalty}
+                  onPenaltyAmount={penaltySeconds}
+                  onAdminReset={handleAdminReset}
+                />
+              )}
+              {level === 3 && (
+                <Level3
+                  finalTime={formatTime()}
+                  onAdminReset={handleAdminReset}
+                />
+              )}
+            </>
           )}
-
-          {level === 3 && <Level3 finalTime={formatTime()} />}
         </>
       )}
-
-      {/* Pass the reset handler down implicitly via DetectiveLayout wrapper in levels 
-          (You need to update Level1, 2, 3 to pass this prop if you want the button visible)
-          Alternatively, we can render the button here if we pull it out of Layout. 
-          For now, Level components wrap Layout, so pass prop:
-      */}
-      {/* NOTE: You should update Level1, Level2, Level3 to accept `onAdminReset={handleAdminReset}` 
-          and pass it to <DetectiveLayout> */}
     </div>
   );
 }
