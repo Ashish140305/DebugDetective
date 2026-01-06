@@ -1,10 +1,12 @@
 export const CONFIG = {
   pcId: "PC-01",
 
-  // --- NEW: SYSTEM LOGIN CONFIG ---
-  systemLoginPassword: "admin", // The password required to enter the app
+  // --- LOGIN CREDENTIALS ---
+  systemLoginPassword: "admin", // <--- CHANGE THIS for security
 
-  // Phase 1: Detective Password Discovery Challenge
+  unlockPin: "7749", // Level 1 Password
+
+  // Level 1: Password Discovery Pool
   passwordPool: [
     {
       password: "MATCH",
@@ -19,15 +21,19 @@ export const CONFIG = {
       hints: ["I have hands but cannot clap", "I have a face but no eyes", "I tell the truth without speaking"]
     }
   ],
-  // Phase 2: Interrogation Mechanics
+
+  // Level 2 Settings
   questionsToSolve: 10,
   incorrectPenalty: 30,
   skipPenalty: 15,
-  // Phase 3
+
+  // Level 3 Topics
   researchTopics: [
     "APIs and Web Architecture",
     "Data Structures in Modern Software",
     "Debugging Complex Systems",
-    "Performance Optimization Techniques"
+    "Performance Optimization Techniques",
+    "The Ethics of Artificial Intelligence",
+    "Cloud Computing Security Standards"
   ]
 };
