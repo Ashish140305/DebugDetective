@@ -16,3 +16,34 @@ This project is a frontend template built with:
 > **Goal:** Evolve this into a powerful debugging assistant interface with interactive tooling and user-friendly workflows (planned).
 
 ## 📁 Contents
+
+_Generated from repo structure_ :contentReference[oaicite:2]{index=2}
+
+---
+
+## 🧠 Prerequisites
+
+Ensure you have the following installed:
+
+- **Node.js** (v16+ recommended)
+- **npm** or **yarn**
+
+---
+
+## ⚡ Quick Start
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Ashish140305/DebugDetective.git
+   cd DebugDetective
+   ```
+   npm install
+
+# or
+
+yarn
+npm run dev
+
+# or
+
+yarn dev
