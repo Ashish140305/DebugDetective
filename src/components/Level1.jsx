@@ -23,7 +23,7 @@ const Level1 = ({ onUnlock, onAdminReset }) => {
 
   return (
     <DetectiveLayout
-      title="Level 1: Physical Discovery"
+      title="Level 1: Node Identification"
       onAdminReset={onAdminReset}
     >
       <div className="flex flex-col md:flex-row gap-8 items-center">

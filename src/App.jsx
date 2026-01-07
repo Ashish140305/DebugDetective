@@ -11,7 +11,13 @@ function App() {
   const [appState, setAppState] = useState("LOGIN");
   const [level, setLevel] = useState(1);
   const [isLocked, setIsLocked] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(1500); // 25 Mins
+
+  // Initialize time from storage or default to 1500 (25 mins)
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const saved = sessionStorage.getItem("dd_timer_remaining");
+    return saved ? parseInt(saved, 10) : 1500;
+  });
+
   const [isActive, setIsActive] = useState(false);
   const [penaltySeconds, setPenaltySeconds] = useState(0);
   const [isDisqualified, setIsDisqualified] = useState(false);
@@ -28,6 +34,11 @@ function App() {
     }
   }, []);
 
+  // Persist timer to sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem("dd_timer_remaining", timeLeft.toString());
+  }, [timeLeft]);
+
   useEffect(() => {
     let countdownInterval = null;
     if (isActive && timeLeft > 0 && !isLocked) {
@@ -42,11 +53,19 @@ function App() {
   }, [isActive, timeLeft, isLocked]);
 
   const handleAdminReset = () => {
+    // Clear LocalStorage Configs
     localStorage.removeItem("dd_game_configured");
     localStorage.removeItem("dd_pc_id");
     localStorage.removeItem("dd_l1_ans");
     localStorage.removeItem("dd_resume_pin");
+
+    // Clear Session Status
     sessionStorage.removeItem("dd_session_active");
+    sessionStorage.removeItem("dd_timer_remaining");
+
+    // FIX: Clear Level 2 Progress and Console History on Reset
+    sessionStorage.removeItem("dd_q_index");
+    sessionStorage.removeItem("dd_console_history");
 
     // Hard refresh to reload state
     window.location.reload();
@@ -78,6 +97,10 @@ function App() {
           onSetupComplete={() => {
             setAppState("GAME");
             sessionStorage.setItem("dd_session_active", "true");
+
+            // FIX: Ensure fresh start for questions when a new game is configured
+            sessionStorage.removeItem("dd_q_index");
+            sessionStorage.removeItem("dd_console_history");
           }}
         />
       )}

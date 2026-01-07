@@ -463,5 +463,404 @@
     "question": "Which sorting algorithm has a worst-case of O(n^2)?",
     "answer": "Bubble Sort",
     "hint": "Also Insertion or Selection, but this one bubbles up."
+  },{
+    "id": 61,
+    "type": "code",
+    "question": "C++ Array: Two Sum - Store index in map.",
+    "codeSnippet": "for (int i = 0; i < nums.size(); ++i) {\n if (m.count(target - nums[i])) return {m[target - nums[i]], i};\n m[nums[i]] = ____;\n}",
+    "answer": "i",
+    "hint": "We need to store the current index to retrieve it later."
+  },
+  {
+    "id": 62,
+    "type": "code",
+    "question": "C++ Array: Best Time to Buy/Sell Stock - Update min price.",
+    "codeSnippet": "int minPrice = INT_MAX, maxProfit = 0;\nfor (int p : prices) {\n minPrice = min(minPrice, p);\n maxProfit = max(maxProfit, p - ________);\n}",
+    "answer": "minPrice",
+    "hint": "Profit is current price minus the lowest price seen so far."
+  },
+  {
+    "id": 63,
+    "type": "code",
+    "question": "C++ Array: Contains Duplicate - Insert into set.",
+    "codeSnippet": "unordered_set<int> s;\nfor (int n : nums) {\n if (s.count(n)) return true;\n s.______(n);\n}",
+    "answer": "insert",
+    "hint": "Method to add an element to a hash set."
+  },
+  {
+    "id": 64,
+    "type": "code",
+    "question": "C++ Array: Majority Element - Moore's Voting Algorithm.",
+    "codeSnippet": "int count = 0, candidate = 0;\nfor (int num : nums) {\n if (count == 0) candidate = num;\n count += (num == candidate) ? 1 : __;\n}",
+    "answer": "-1",
+    "hint": "Decrement the count if the current number is not the candidate."
+  },
+  {
+    "id": 65,
+    "type": "code",
+    "question": "C++ Array: Move Zeroes - Swap non-zero elements.",
+    "codeSnippet": "int lastNonZero = 0;\nfor (int i = 0; i < nums.size(); i++) {\n if (nums[i] != 0) {\n  swap(nums[lastNonZero++], _______);\n }\n}",
+    "answer": "nums[i]",
+    "hint": "Swap the current element with the last non-zero position."
+  },
+  {
+    "id": 66,
+    "type": "code",
+    "question": "C++ Array: Maximum Subarray (Kadane's) - Reset sum.",
+    "codeSnippet": "int maxSum = nums[0], curSum = 0;\nfor (int n : nums) {\n if (curSum < 0) curSum = 0;\n curSum += n;\n maxSum = ___(maxSum, curSum);\n}",
+    "answer": "max",
+    "hint": "Standard function to get the larger of two values."
+  },
+  {
+    "id": 67,
+    "type": "code",
+    "question": "C++ Array: Missing Number - Sum formula logic.",
+    "codeSnippet": "int n = nums.size();\nint total = n * (n + 1) / 2;\nfor (int x : nums) total __ x;\nreturn total;",
+    "answer": "-=",
+    "hint": "Subtract each number from the expected sum."
+  },
+  {
+    "id": 68,
+    "type": "code",
+    "question": "C++ Linked List: Reverse List - Update next pointer.",
+    "codeSnippet": "ListNode* prev = nullptr;\nwhile (head) {\n ListNode* next = head->next;\n head->next = ____;\n prev = head;\n head = next;\n}",
+    "answer": "prev",
+    "hint": "Point the current node backwards to the previous node."
+  },
+  {
+    "id": 69,
+    "type": "code",
+    "question": "C++ Linked List: Detect Cycle - Fast pointer step.",
+    "codeSnippet": "while (fast && fast->next) {\n slow = slow->next;\n fast = fast->next->____;\n if (slow == fast) return true;\n}",
+    "answer": "next",
+    "hint": "The fast pointer moves two steps at a time."
+  },
+  {
+    "id": 70,
+    "type": "code",
+    "question": "C++ Matrix: Set Zeroes - Mark first column.",
+    "codeSnippet": "if (matrix[i][j] == 0) {\n matrix[i][0] = 0;\n matrix[0][j] = _;\n}",
+    "answer": "0",
+    "hint": "Use the first row and column as markers."
+  },
+  {
+    "id": 71,
+    "type": "code",
+    "question": "C++ Array: Product Except Self - Right pass multiplication.",
+    "codeSnippet": "int right = 1;\nfor (int i = n - 1; i >= 0; i--) {\n res[i] *= right;\n right *= _______;\n}",
+    "answer": "nums[i]",
+    "hint": "Update the running product with the current element."
+  },
+  {
+    "id": 72,
+    "type": "code",
+    "question": "C++ Linked List: Merge Two Lists - recursive call.",
+    "codeSnippet": "if (l1->val < l2->val) {\n l1->next = mergeTwoLists(l1->next, l2);\n return __;\n}",
+    "answer": "l1",
+    "hint": "Return the node that has the smaller value."
+  },
+  {
+    "id": 73,
+    "type": "code",
+    "question": "C++ Array: Container With Most Water - Move pointer.",
+    "codeSnippet": "while (l < r) {\n area = max(area, min(height[l], height[r]) * (r - l));\n if (height[l] < height[r]) l++; else ___;\n}",
+    "answer": "r--",
+    "hint": "Move the right pointer inward if it's the taller (or smaller? No, check logic) side... actually move the smaller side."
+  },
+  {
+    "id": 74,
+    "type": "code",
+    "question": "C++ Matrix: Rotate Image - Transpose swap.",
+    "codeSnippet": "for (int i = 0; i < n; ++i)\n for (int j = i; j < n; ++j)\n  swap(matrix[i][j], matrix[__][__]);",
+    "answer": "j][i",
+    "hint": "Swap row index with column index for transpose."
+  },
+  {
+    "id": 75,
+    "type": "code",
+    "question": "C++ Linked List: Remove Nth Node From End - Gap creation.",
+    "codeSnippet": "for (int i = 0; i <= n; i++) fast = fast->next;\nwhile (fast) {\n slow = slow->next;\n fast = fast->____;\n}",
+    "answer": "next",
+    "hint": "Move both pointers until fast reaches the end."
+  },
+  {
+    "id": 76,
+    "type": "code",
+    "question": "C++ Array: Search Insert Position - Binary Search.",
+    "codeSnippet": "while (low <= high) {\n int mid = low + (high - low) / 2;\n if (nums[mid] < target) low = ___ + 1;\n else high = mid - 1;\n}",
+    "answer": "mid",
+    "hint": "If target is larger, search the right half."
+  },
+  {
+    "id": 77,
+    "type": "code",
+    "question": "C++ Linked List: Middle Node - Loop condition.",
+    "codeSnippet": "ListNode *slow = head, *fast = head;\nwhile (fast && fast->____) {\n slow = slow->next;\n fast = fast->next->next;\n}",
+    "answer": "next",
+    "hint": "Check if the next node exists for the fast pointer."
+  },
+  {
+    "id": 78,
+    "type": "code",
+    "question": "C++ Array: Merge Sorted Array - Fill from back.",
+    "codeSnippet": "while (j >= 0) {\n if (i >= 0 && nums1[i] > nums2[j]) nums1[k--] = nums1[i--];\n else nums1[k--] = nums2[___];\n}",
+    "answer": "j--",
+    "hint": "Take element from the second array and decrement its index."
+  },
+  {
+    "id": 79,
+    "type": "code",
+    "question": "C++ Matrix: Number of Islands - DFS check.",
+    "codeSnippet": "if (i < 0 || j < 0 || i >= n || j >= m || grid[i][j] == '0') return;\ngrid[i][j] = '0';\ndfs(grid, i + 1, j); // ... other calls",
+    "answer": "return",
+    "hint": "Base case for recursion if out of bounds or water."
+  },
+  {
+    "id": 80,
+    "type": "code",
+    "question": "C++ Array: 3Sum - Skip duplicates.",
+    "codeSnippet": "if (i > 0 && nums[i] == nums[i - 1]) ________;\nint l = i + 1, r = n - 1;",
+    "answer": "continue",
+    "hint": "Skip current iteration to avoid duplicate triplets."
+  },
+  {
+    "id": 81,
+    "type": "code",
+    "question": "C++ Linked List: Palindrome - Compare values.",
+    "codeSnippet": "while (slow) {\n if (head->val != slow->val) return _____;\n head = head->next;\n slow = slow->next;\n}",
+    "answer": "false",
+    "hint": "If values don't match, it's not a palindrome."
+  },
+  {
+    "id": 82,
+    "type": "code",
+    "question": "C++ Matrix: Spiral Order - Traverse right.",
+    "codeSnippet": "for (int i = left; i <= right; i++) res.push_back(matrix[___][i]);\ntop++;",
+    "answer": "top",
+    "hint": "We are traversing the top row."
+  },
+  {
+    "id": 83,
+    "type": "code",
+    "question": "C++ Array: Trap Rain Water - Min boundary.",
+    "codeSnippet": "leftMax = max(leftMax, height[l]);\nrightMax = max(rightMax, height[r]);\nif (leftMax < rightMax) res += leftMax - height[l++];",
+    "answer": "l++",
+    "hint": "After processing the left side, increment the left pointer (logic implied in previous snippet part, fill 'l++' or similar)."
+  },
+  {
+    "id": 84,
+    "type": "code",
+    "question": "C++ Linked List: Intersection - Pointer switch.",
+    "codeSnippet": "ListNode *a = headA, *b = headB;\nwhile (a != b) {\n a = a ? a->next : headB;\n b = b ? b->next : _____;\n}",
+    "answer": "headA",
+    "hint": "Switch to the other list's head when reaching the end."
+  },
+  {
+    "id": 85,
+    "type": "code",
+    "question": "C++ Matrix: Search 2D Matrix - Virtual index.",
+    "codeSnippet": "int mid = low + (high - low) / 2;\nint val = matrix[mid / cols][mid % ____];",
+    "answer": "cols",
+    "hint": "Modulo by the number of columns to get the column index."
+  },
+  {
+    "id": 86,
+    "type": "code",
+    "question": "C++ Array: Plus One - Carry handling.",
+    "codeSnippet": "for (int i = n - 1; i >= 0; i--) {\n if (digits[i] < 9) {\n  digits[i]++;\n  return digits;\n }\n digits[i] = _;\n}",
+    "answer": "0",
+    "hint": "If the digit is 9, it becomes 0 after adding one."
+  },
+  {
+    "id": 87,
+    "type": "code",
+    "question": "C++ Linked List: Add Two Numbers - Carry calculation.",
+    "codeSnippet": "int sum = carry + (l1 ? l1->val : 0) + (l2 ? l2->val : 0);\ncurr->next = new ListNode(sum % 10);\ncarry = sum / __;",
+    "answer": "10",
+    "hint": "Divide by this number to get the carry for the next position."
+  },
+  {
+    "id": 88,
+    "type": "code",
+    "question": "C++ Array: Sort Colors (DNF Sort) - Swap 2.",
+    "codeSnippet": "if (nums[mid] == 0) swap(nums[low++], nums[mid++]);\nelse if (nums[mid] == 1) mid++;\nelse swap(nums[mid], nums[____--]);",
+    "answer": "high",
+    "hint": "Put value 2 at the end of the array."
+  },
+  {
+    "id": 89,
+    "type": "code",
+    "question": "C++ Matrix: Word Search - Backtracking restore.",
+    "codeSnippet": "char temp = board[i][j];\nboard[i][j] = '#';\nbool found = dfs(board, word, i + 1, j, k + 1) || ...;\nboard[i][j] = ____;",
+    "answer": "temp",
+    "hint": "Restore the original character after backtracking."
+  },
+  {
+    "id": 90,
+    "type": "code",
+    "question": "C++ Linked List: Cycle II - Reset pointer.",
+    "codeSnippet": "if (slow == fast) {\n slow = ____;\n while (slow != fast) {\n  slow = slow->next; fast = fast->next;\n }\n return slow;\n}",
+    "answer": "head",
+    "hint": "Move slow pointer back to the start to find entry point."
+  },
+  {
+    "id": 91,
+    "type": "code",
+    "question": "C++ Array: Find Duplicate Number - Flyod's Hare & Tortoise.",
+    "codeSnippet": "do {\n slow = nums[slow];\n fast = nums[nums[fast]];\n} while (slow != ____);",
+    "answer": "fast",
+    "hint": "Wait until the two pointers meet."
+  },
+  {
+    "id": 92,
+    "type": "code",
+    "question": "C++ Matrix: Valid Sudoku - Subgrid index.",
+    "codeSnippet": "int k = i / 3 * 3 + j / 3;\nif (row[i].count(num) || col[j].count(num) || box[k]._____(num))\n return false;",
+    "answer": "count",
+    "hint": "Check if the number already exists in the sub-box set."
+  },
+  {
+    "id": 93,
+    "type": "code",
+    "question": "C++ Linked List: Remove Elements - Skip node.",
+    "codeSnippet": "while (curr && curr->next) {\n if (curr->next->val == val) curr->next = curr->next->____;\n else curr = curr->next;\n}",
+    "answer": "next",
+    "hint": "Bypass the node that matches the value."
+  },
+  {
+    "id": 94,
+    "type": "code",
+    "question": "C++ Array: Longest Consecutive Sequence - Set lookup.",
+    "codeSnippet": "if (!s.count(num - 1)) {\n int currentNum = num;\n while (s.count(currentNum + 1)) {\n  currentNum += 1;\n  streak++;\n }\n}",
+    "answer": "1",
+    "hint": "We check if num-1 exists to start counting from the beginning of a sequence."
+  },
+  {
+    "id": 95,
+    "type": "code",
+    "question": "C++ Linked List: Odd Even List - Connect odd.",
+    "codeSnippet": "odd->next = even->next;\nodd = odd->next;\neven->next = odd->____;\neven = even->next;",
+    "answer": "next",
+    "hint": "Connect the even node to the one after odd."
+  },
+  {
+    "id": 96,
+    "type": "code",
+    "question": "C++ Matrix: Game of Life - Bit encoding.",
+    "codeSnippet": "if ((board[i][j] == 1 && (lives < 2 || lives > 3)))\n board[i][j] = 1; // 01 -> currently 1, next 0\nif (board[i][j] == 0 && lives == 3)\n board[i][j] = _;",
+    "answer": "2",
+    "hint": "Use 2 (binary 10) to store 'dead now, alive next'."
+  },
+  {
+    "id": 97,
+    "type": "code",
+    "question": "C++ Array: Rotate Array - Reverse steps.",
+    "codeSnippet": "reverse(nums.begin(), nums.end());\nreverse(nums.begin(), nums.begin() + k);\n_______(nums.begin() + k, nums.end());",
+    "answer": "reverse",
+    "hint": "Reverse the second part of the array."
+  },
+  {
+    "id": 98,
+    "type": "code",
+    "question": "C++ Linked List: Swap Pairs - Recursive step.",
+    "codeSnippet": "ListNode* first = head;\nListNode* second = head->next;\nfirst->next = swapPairs(second->____);\nsecond->next = first;",
+    "answer": "next",
+    "hint": "Pass the rest of the list to the recursion."
+  },
+  {
+    "id": 99,
+    "type": "code",
+    "question": "C++ Matrix: Diagonal Traverse - Direction flip.",
+    "codeSnippet": "if (up) {\n if (col == n - 1) { row++; up = !up; }\n else if (row == 0) { col++; up = ___ }\n}",
+    "answer": "!up",
+    "hint": "Toggle the direction flag."
+  },
+  {
+    "id": 100,
+    "type": "code",
+    "question": "C++ Array: Single Number - XOR logic.",
+    "codeSnippet": "int res = 0;\nfor (int n : nums) res ^= _;\nreturn res;",
+    "answer": "n",
+    "hint": "XORing a number with itself cancels it out."
+  },
+  {
+    "id": 101,
+    "type": "code",
+    "question": "C++ Linked List: Sort List - Split (Fast/Slow).",
+    "codeSnippet": "ListNode *slow = head, *fast = head, *prev = nullptr;\nwhile (fast && fast->next) {\n prev = slow;\n slow = slow->next;\n fast = fast->next->____;\n}",
+    "answer": "next",
+    "hint": "Fast moves 2 steps."
+  },
+  {
+    "id": 102,
+    "type": "code",
+    "question": "C++ Matrix: Kth Smallest in Sorted Matrix - Binary Search Count.",
+    "codeSnippet": "int count = 0, j = n - 1;\nfor (int i = 0; i < n; i++) {\n while (j >= 0 && matrix[i][j] > mid) j--;\n count += (j + _);\n}",
+    "answer": "1",
+    "hint": "Add the count of valid numbers in the row (index + 1)."
+  },
+  {
+    "id": 103,
+    "type": "code",
+    "question": "C++ Array: Next Permutation - Swap logic.",
+    "codeSnippet": "while (i >= 0 && nums[i] >= nums[i + 1]) i--;\nif (i >= 0) {\n int j = nums.size() - 1;\n while (nums[j] <= nums[i]) j--;\n swap(nums[i], _______);\n}",
+    "answer": "nums[j]",
+    "hint": "Swap with the next larger element found from the right."
+  },
+  {
+    "id": 104,
+    "type": "code",
+    "question": "C++ Linked List: Delete Node (No Head) - Copy value.",
+    "codeSnippet": "node->val = node->next->val;\nnode->next = node->next->____;",
+    "answer": "next",
+    "hint": "Skip the next node after copying its value."
+  },
+  {
+    "id": 105,
+    "type": "code",
+    "question": "C++ Array: Sliding Window Max - Deque push.",
+    "codeSnippet": "while (!dq.empty() && nums[dq.back()] < nums[i])\n dq.________();\ndq.push_back(i);",
+    "answer": "pop_back",
+    "hint": "Remove elements smaller than current from the back."
+  },
+  {
+    "id": 106,
+    "type": "code",
+    "question": "C++ Matrix: Maximal Square - DP transition.",
+    "codeSnippet": "if (matrix[i-1][j-1] == '1')\n dp[i][j] = min({dp[i-1][j], dp[i][j-1], dp[i-1][___]}) + 1;",
+    "answer": "j-1",
+    "hint": "Check the top-left diagonal neighbor."
+  },
+  {
+    "id": 107,
+    "type": "code",
+    "question": "C++ Linked List: Rotate List - Break ring.",
+    "codeSnippet": "tail->next = head; // Make circular\nint steps = len - k % len;\nfor (int i = 0; i < steps; i++) tail = tail->next;\nhead = tail->next;\ntail->next = _______;",
+    "answer": "nullptr",
+    "hint": "Sever the circle to form the new list."
+  },
+  {
+    "id": 108,
+    "type": "code",
+    "question": "C++ Array: Subarray Sum Equals K - Map update.",
+    "codeSnippet": "sum += num;\nif (map.count(sum - k)) count += map[sum - k];\nmap[___]++;",
+    "answer": "sum",
+    "hint": "Increment the frequency of the current prefix sum."
+  },
+  {
+    "id": 109,
+    "type": "code",
+    "question": "C++ Matrix: Flood Fill - Recursion guard.",
+    "codeSnippet": "if (r < 0 || r >= R || c < 0 || c >= C || image[r][c] != color)\n ______;",
+    "answer": "return",
+    "hint": "Stop if bounds reached or color doesn't match."
+  },
+  {
+    "id": 110,
+    "type": "code",
+    "question": "C++ Linked List: Reorder List - Merge.",
+    "codeSnippet": "while (second) {\n temp1 = first->next;\n temp2 = second->next;\n first->next = second;\n second->next = _____;\n first = temp1; second = temp2;\n}",
+    "answer": "temp1",
+    "hint": "Link the second node back to the next node of the first list."
   }
 ]
