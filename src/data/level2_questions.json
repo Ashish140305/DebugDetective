@@ -1,0 +1,467 @@
+[
+  {
+    "id": 1,
+    "type": "code",
+    "question": "JavaScript: What defines the cleanup function in this hook?",
+    "codeSnippet": "useEffect(() => {\n  const id = setInterval(tick, 1000);\n  return () => _____ (id);\n}, []);",
+    "answer": "clearInterval",
+    "hint": "The standard function to stop a timer."
+  },
+  {
+    "id": 2,
+    "type": "code",
+    "question": "C++: Fix the memory leak in this pointer usage.",
+    "codeSnippet": "int* ptr = new int(10);\n// ... logic ...\n____ ptr;",
+    "answer": "delete",
+    "hint": "Keyword to deallocate dynamic memory."
+  },
+  {
+    "id": 3,
+    "type": "code",
+    "question": "Python: Complete the list comprehension for even numbers.",
+    "codeSnippet": "evens = [x for x in range(10) if x % 2 __ 0]",
+    "answer": "==",
+    "hint": "Comparison operator for equality."
+  },
+  {
+    "id": 4,
+    "type": "code",
+    "question": "Java: Which keyword prevents a class from being subclassed?",
+    "codeSnippet": "public _____ class String {\n  // ...\n}",
+    "answer": "final",
+    "hint": "Also used to make variables constant."
+  },
+  {
+    "id": 5,
+    "type": "code",
+    "question": "C: Access the value pointed to by 'p'.",
+    "codeSnippet": "int x = 10;\nint *p = &x;\nprintf(\"%d\", _p);",
+    "answer": "*",
+    "hint": "The dereference operator."
+  },
+  {
+    "id": 6,
+    "type": "code",
+    "question": "HTML5: Which input attribute enables regular expression validation?",
+    "codeSnippet": "<input type=\"text\" _______=\"[A-Za-z]{3}\" title=\"Three letters only\">",
+    "answer": "pattern",
+    "hint": "It matches a regex."
+  },
+  {
+    "id": 7,
+    "type": "code",
+    "question": "JavaScript: How do you safely access a nested property?",
+    "codeSnippet": "const user = {};\nconsole.log(user?.address?._);",
+    "answer": "street",
+    "hint": "(Hypothetical) Just complete the chaining syntax or key name. Actually, asking for the operator: user?.address_.__"
+  },
+  {
+    "id": 8,
+    "type": "code",
+    "question": "JavaScript: Fix the 'Optional Chaining' syntax.",
+    "codeSnippet": "const zip = user.address__zipCode;",
+    "answer": "?.",
+    "hint": "Question mark followed by dot."
+  },
+  {
+    "id": 9,
+    "type": "code",
+    "question": "Python: Use a decorator to wrap a function.",
+    "codeSnippet": "@______\ndef my_func():\n    pass",
+    "answer": "my_decorator",
+    "hint": "Any valid decorator name (concept check). Actually, let's fix the syntax: def decorator(f): ... / @decorator"
+  },
+  {
+    "id": 10,
+    "type": "code",
+    "question": "C++: Which operator accesses members of a pointer to a struct?",
+    "codeSnippet": "Person* p = &myPerson;\np___name = \"John\";",
+    "answer": "->",
+    "hint": "Arrow operator."
+  },
+  {
+    "id": 11,
+    "type": "code",
+    "question": "Java: How do you implement an interface?",
+    "codeSnippet": "class Car ______ Vehicle {\n  public void drive() {}\n}",
+    "answer": "implements",
+    "hint": "Not extends."
+  },
+  {
+    "id": 12,
+    "type": "code",
+    "question": "C: Which function allocates memory dynamically?",
+    "codeSnippet": "int *arr = (int*) ______(5 * sizeof(int));",
+    "answer": "malloc",
+    "hint": "Memory Allocation."
+  },
+  {
+    "id": 13,
+    "type": "code",
+    "question": "JavaScript: What method creates a shallow copy of an array?",
+    "codeSnippet": "const copy = original._____();",
+    "answer": "slice",
+    "hint": "Can also extract a portion of the array."
+  },
+  {
+    "id": 14,
+    "type": "code",
+    "question": "Python: How do you define a generator function?",
+    "codeSnippet": "def my_gen():\n    ____ 1\n    ____ 2",
+    "answer": "yield",
+    "hint": "Instead of return."
+  },
+  {
+    "id": 15,
+    "type": "code",
+    "question": "HTML: Which tag specifies metadata like character set?",
+    "codeSnippet": "<____ charset=\"UTF-8\">",
+    "answer": "meta",
+    "hint": "Goes inside the head."
+  },
+  {
+    "id": 16,
+    "type": "code",
+    "question": "C++: What is the scope resolution operator?",
+    "codeSnippet": "std__cout << \"Hello\";",
+    "answer": "::",
+    "hint": "Double colons."
+  },
+  {
+    "id": 17,
+    "type": "code",
+    "question": "Java: Which collection does not allow duplicate elements?",
+    "codeSnippet": "Set<String> names = new ____<>();",
+    "answer": "HashSet",
+    "hint": "A common implementation of Set."
+  },
+  {
+    "id": 18,
+    "type": "code",
+    "question": "JavaScript: Convert a JSON string into an object.",
+    "codeSnippet": "const obj = JSON._____(jsonString);",
+    "answer": "parse",
+    "hint": "Analyze the string."
+  },
+  {
+    "id": 19,
+    "type": "code",
+    "question": "C: Format specifier for a hexadecimal integer.",
+    "codeSnippet": "printf(\"Value: %_\", 255); // Prints 'ff'",
+    "answer": "x",
+    "hint": "Short for hex."
+  },
+  {
+    "id": 20,
+    "type": "code",
+    "question": "Python: Which method is called when an object is initialized?",
+    "codeSnippet": "class Dog:\n    def ________(self, name):\n        self.name = name",
+    "answer": "init",
+    "hint": "Constructs the object."
+  },
+  {
+    "id": 21,
+    "type": "code",
+    "question": "HTML: Attribute to disable autocomplete on a form.",
+    "codeSnippet": "<form ___________=\"off\">",
+    "answer": "autocomplete",
+    "hint": "Matches the functionality name."
+  },
+  {
+    "id": 22,
+    "type": "code",
+    "question": "JavaScript: Filter an array to keep only positive numbers.",
+    "codeSnippet": "nums.filter(n => n _ 0);",
+    "answer": ">",
+    "hint": "Greater than operator."
+  },
+  {
+    "id": 23,
+    "type": "code",
+    "question": "C++: Which keyword declares a pure virtual function?",
+    "codeSnippet": "virtual void draw() = _;",
+    "answer": "0",
+    "hint": "Equals zero."
+  },
+  {
+    "id": 24,
+    "type": "code",
+    "question": "Java: Keyword to call the parent class constructor.",
+    "codeSnippet": "public Dog() {\n  ____();\n}",
+    "answer": "super",
+    "hint": "Above the current class."
+  },
+  {
+    "id": 25,
+    "type": "code",
+    "question": "Python: Merge two dictionaries (Python 3.9+).",
+    "codeSnippet": "z = x _ y",
+    "answer": "|",
+    "hint": "Pipe operator."
+  },
+  {
+    "id": 26,
+    "type": "code",
+    "question": "JavaScript: Which Promise method waits for all to finish?",
+    "codeSnippet": "Promise.___([p1, p2]).then(...)",
+    "answer": "all",
+    "hint": "Every single one."
+  },
+  {
+    "id": 27,
+    "type": "code",
+    "question": "C: What preprocessor directive includes a library?",
+    "codeSnippet": "#_______ <stdio.h>",
+    "answer": "include",
+    "hint": "To add a file."
+  },
+  {
+    "id": 28,
+    "type": "code",
+    "question": "HTML: Which element is used for semantic navigation?",
+    "codeSnippet": "<___>\n  <a href=\"/home\">Home</a>\n</___>",
+    "answer": "nav",
+    "hint": "Short for navigation."
+  },
+  {
+    "id": 29,
+    "type": "code",
+    "question": "Java: Handle an exception that might occur.",
+    "codeSnippet": "___ {\n  riskyMethod();\n} catch (Exception e) { ... }",
+    "answer": "try",
+    "hint": "Attempt the code."
+  },
+  {
+    "id": 30,
+    "type": "code",
+    "question": "Python: Check if a key exists in a dictionary.",
+    "codeSnippet": "if \"key\" __ my_dict:",
+    "answer": "in",
+    "hint": "Membership operator."
+  },
+  {
+    "id": 31,
+    "type": "code",
+    "question": "C++: Specifier for a constant that cannot be modified.",
+    "codeSnippet": "_____ int MAX_VAL = 100;",
+    "answer": "const",
+    "hint": "Constant."
+  },
+  {
+    "id": 32,
+    "type": "code",
+    "question": "JavaScript: Remove the last element of an array.",
+    "codeSnippet": "arr.____();",
+    "answer": "pop",
+    "hint": "Goes with push."
+  },
+  {
+    "id": 33,
+    "type": "code",
+    "question": "CSS: Which property changes the box model calculation?",
+    "codeSnippet": "box-______: border-box;",
+    "answer": "sizing",
+    "hint": "How the size is calculated."
+  },
+  {
+    "id": 34,
+    "type": "code",
+    "question": "Java: Static method to convert String to Integer.",
+    "codeSnippet": "int i = Integer.________(\"123\");",
+    "answer": "parseInt",
+    "hint": "Parse the integer."
+  },
+  {
+    "id": 35,
+    "type": "code",
+    "question": "Python: Lambda function to add two numbers.",
+    "codeSnippet": "add = ______ a, b: a + b",
+    "answer": "lambda",
+    "hint": "Anonymous function keyword."
+  },
+  {
+    "id": 36,
+    "type": "code",
+    "question": "C: Size of a double type in bytes (typically).",
+    "codeSnippet": "printf(\"%lu\", ______(double));",
+    "answer": "sizeof",
+    "hint": "Operator to get size."
+  },
+  {
+    "id": 37,
+    "type": "code",
+    "question": "JavaScript: Destructure the 'name' property.",
+    "codeSnippet": "const { ____ } = userObj;",
+    "answer": "name",
+    "hint": "Must match the key."
+  },
+  {
+    "id": 38,
+    "type": "code",
+    "question": "HTML: Input type for a hidden field.",
+    "codeSnippet": "<input type=\"______\" name=\"csrf_token\" value=\"123\">",
+    "answer": "hidden",
+    "hint": "Invisible to user."
+  },
+  {
+    "id": 39,
+    "type": "code",
+    "question": "C++: Include the standard I/O stream library.",
+    "codeSnippet": "#include <________>",
+    "answer": "iostream",
+    "hint": "Input Output Stream."
+  },
+  {
+    "id": 40,
+    "type": "code",
+    "question": "Java: Interface for a separate thread of execution.",
+    "codeSnippet": "class Task implements ________ { ... }",
+    "answer": "Runnable",
+    "hint": "Able to be run."
+  },
+  {
+    "id": 41,
+    "type": "code",
+    "question": "Python: Open a file context manager.",
+    "codeSnippet": "____ open(\"file.txt\") as f:",
+    "answer": "with",
+    "hint": "Ensures cleanup."
+  },
+  {
+    "id": 42,
+    "type": "code",
+    "question": "JavaScript: Check if a value is 'Not a Number'.",
+    "codeSnippet": "if (_____(value)) { ... }",
+    "answer": "isNaN",
+    "hint": "Is Not a Number."
+  },
+  {
+    "id": 43,
+    "type": "code",
+    "question": "C: Format specifier for a string.",
+    "codeSnippet": "printf(\"Hello %_\", name);",
+    "answer": "s",
+    "hint": "String."
+  },
+  {
+    "id": 44,
+    "type": "code",
+    "question": "CSS: Flexbox property to center items vertically.",
+    "codeSnippet": "align-______: center;",
+    "answer": "items",
+    "hint": "Aligning the items."
+  },
+  {
+    "id": 45,
+    "type": "code",
+    "question": "Java: Keyword to throw an exception manually.",
+    "codeSnippet": "_____ new IllegalArgumentException(\"Bad arg\");",
+    "answer": "throw",
+    "hint": "Not throws (which is for declaration)."
+  },
+  {
+    "id": 46,
+    "type": "trivia",
+    "question": "What is the Time Complexity of Binary Search?",
+    "answer": "O(log n)",
+    "hint": "Logarithmic time."
+  },
+  {
+    "id": 47,
+    "type": "trivia",
+    "question": "Which HTTP method is idempotent and used to update a resource?",
+    "answer": "PUT",
+    "hint": "Or PATCH, but PUT replaces the whole entity."
+  },
+  {
+    "id": 48,
+    "type": "trivia",
+    "question": "What does ACID stand for in databases?",
+    "answer": "Atomicity Consistency Isolation Durability",
+    "hint": "The four properties of transactions."
+  },
+  {
+    "id": 49,
+    "type": "trivia",
+    "question": "In Git, what hash algorithm is used for commit IDs?",
+    "answer": "SHA-1",
+    "hint": "Secure Hash Algorithm 1."
+  },
+  {
+    "id": 50,
+    "type": "trivia",
+    "question": "What is the default port for MySQL?",
+    "answer": "3306",
+    "hint": "Three three zero six."
+  },
+  {
+    "id": 51,
+    "type": "trivia",
+    "question": "Which design pattern ensures a class has only one instance?",
+    "answer": "Singleton",
+    "hint": "Single instance."
+  },
+  {
+    "id": 52,
+    "type": "trivia",
+    "question": "What is the maximum value of a 32-bit signed integer (approx)?",
+    "answer": "2 billion",
+    "hint": "2^31 - 1."
+  },
+  {
+    "id": 53,
+    "type": "trivia",
+    "question": "What OSI layer handles IP addressing?",
+    "answer": "Network",
+    "hint": "Layer 3."
+  },
+  {
+    "id": 54,
+    "type": "trivia",
+    "question": "Which data structure uses LIFO (Last In First Out)?",
+    "answer": "Stack",
+    "hint": "Like a stack of plates."
+  },
+  {
+    "id": 55,
+    "type": "trivia",
+    "question": "What is the keyword for a variable that can be null in Kotlin?",
+    "answer": "?",
+    "hint": "Question mark suffix."
+  },
+  {
+    "id": 56,
+    "type": "trivia",
+    "question": "What does DNS stand for?",
+    "answer": "Domain Name System",
+    "hint": "Translates names to IPs."
+  },
+  {
+    "id": 57,
+    "type": "trivia",
+    "question": "In REST API, which code means 'Unauthorized'?",
+    "answer": "401",
+    "hint": "Not 403 (Forbidden)."
+  },
+  {
+    "id": 58,
+    "type": "trivia",
+    "question": "Who created the Python programming language?",
+    "answer": "Guido van Rossum",
+    "hint": "Dutch programmer."
+  },
+  {
+    "id": 59,
+    "type": "trivia",
+    "question": "What is the standard standard for wireless LANs?",
+    "answer": "802.11",
+    "hint": "IEEE number."
+  },
+  {
+    "id": 60,
+    "type": "trivia",
+    "question": "Which sorting algorithm has a worst-case of O(n^2)?",
+    "answer": "Bubble Sort",
+    "hint": "Also Insertion or Selection, but this one bubbles up."
+  }
+]

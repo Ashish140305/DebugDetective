@@ -2,16 +2,15 @@ import React, { useState, useEffect } from "react";
 import {
   RefreshCw,
   CheckCircle2,
-  AlertTriangle,
   Lightbulb,
   Code2,
   HelpCircle,
 } from "lucide-react";
-import he from "he";
 import DetectiveLayout from "./DetectiveLayout";
 import { checkSimilarity } from "../utils/fuzzyMatch";
 import { CONFIG } from "../gameConfig";
-import { CODING_CHALLENGES } from "../data/codingQuestions";
+// Import the local JSON file
+import QUESTIONS from "../data/level2_questions.json";
 
 const Level2 = ({
   onSolve,
@@ -49,57 +48,32 @@ const Level2 = ({
     if (history.length > 0) history.forEach((entry) => console.log(entry));
   }, []);
 
-  // --- FETCH Logic ---
-  const fetchQuestion = async () => {
+  // --- FETCH Logic (Now Local) ---
+  const fetchQuestion = () => {
     setLoading(true);
     setShowHint(false);
 
-    const useCodingQuestion = Math.random() > 0.5;
+    // Simulate a brief delay for UI smoothness (optional, can be removed for instant load)
+    setTimeout(() => {
+      // Pick a random question from the JSON file
+      const randomIndex = Math.floor(Math.random() * QUESTIONS.length);
+      const randomQ = QUESTIONS[randomIndex];
 
-    if (useCodingQuestion) {
-      const randomChallenge =
-        CODING_CHALLENGES[Math.floor(Math.random() * CODING_CHALLENGES.length)];
       setQuestionData({
-        type: "code",
-        question: randomChallenge.question,
-        codeSnippet: randomChallenge.codeSnippet,
-        answer: randomChallenge.answer,
-        hint: randomChallenge.hint,
+        type: randomQ.type, // "code" or "trivia"
+        question: randomQ.question,
+        codeSnippet: randomQ.codeSnippet || null,
+        answer: randomQ.answer,
+        hint: randomQ.hint,
       });
+
       logToConsole(
-        randomChallenge.question,
-        randomChallenge.answer,
-        `CODING Q (${currentQIndex + 1})`
+        randomQ.question,
+        randomQ.answer,
+        `${randomQ.type.toUpperCase()} Q (${currentQIndex + 1})`
       );
       setLoading(false);
-    } else {
-      try {
-        const response = await fetch(
-          "https://opentdb.com/api.php?amount=1&category=18&difficulty=medium&type=multiple"
-        );
-        const data = await response.json();
-        if (data.results && data.results.length > 0) {
-          const q = data.results[0];
-          const cleanQ = he.decode(q.question);
-          const cleanA = he.decode(q.correct_answer);
-          const firstLetter = cleanA.charAt(0);
-          const wordCount = cleanA.split(" ").length;
-          setQuestionData({
-            type: "trivia",
-            question: cleanQ,
-            answer: cleanA,
-            hint: `Starts with "${firstLetter}" (${wordCount} words)`,
-            codeSnippet: null,
-          });
-          logToConsole(cleanQ, cleanA, `TRIVIA Q (${currentQIndex + 1})`);
-        }
-      } catch (error) {
-        // Fallback
-        const fallback = CODING_CHALLENGES[0];
-        setQuestionData(fallback);
-      }
-      setLoading(false);
-    }
+    }, 300); // 300ms delay to feel like a "system process"
   };
 
   useEffect(() => {
@@ -114,6 +88,8 @@ const Level2 = ({
     const handleUnload = () =>
       sessionStorage.setItem("dd_page_refreshed", "true");
     window.addEventListener("beforeunload", handleUnload);
+
+    // Initial Fetch
     fetchQuestion();
 
     return () => window.removeEventListener("beforeunload", handleUnload);
@@ -128,6 +104,7 @@ const Level2 = ({
       return;
     }
 
+    // Stricter threshold for code, looser for trivia
     const threshold = questionData.type === "code" ? 0.9 : 0.8;
     const isCorrect = checkSimilarity(
       userAnswer,
@@ -171,7 +148,7 @@ const Level2 = ({
       title="Level 2: Investigation"
       timer={timerDisplay}
       penalty={onPenaltyAmount}
-      onAdminReset={onAdminReset} // <--- Passed to Layout
+      onAdminReset={onAdminReset}
     >
       <div className="space-y-8">
         {/* Progress Bar */}
@@ -194,7 +171,7 @@ const Level2 = ({
         <div className="min-h-50">
           {loading ? (
             <div className="flex items-center justify-center h-40 text-gray-400 gap-2">
-              <RefreshCw className="animate-spin" /> Loading next question...
+              <RefreshCw className="animate-spin" /> Retrieving data...
             </div>
           ) : (
             <div className="animate-fade-in space-y-4">
