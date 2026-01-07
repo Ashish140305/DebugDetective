@@ -107,7 +107,7 @@ const Level2 = ({
     if (savedIndex) {
       setCurrentQIndex(parseInt(savedIndex));
       if (sessionStorage.getItem("dd_page_refreshed")) {
-        onPenalty(10);
+        onPenalty(300);
         sessionStorage.removeItem("dd_page_refreshed");
       }
     }
