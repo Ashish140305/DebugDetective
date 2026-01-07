@@ -39,6 +39,7 @@ Ensure you have the following installed:
    cd DebugDetective
    ```
 
+2. **Install dependencies and start the development server**
    ```bash
    npm install
    npm run dev
