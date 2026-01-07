@@ -33,17 +33,13 @@ Ensure you have the following installed:
 ## ⚡ Quick Start
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/Ashish140305/DebugDetective.git
    cd DebugDetective
    ```
+
+   ```bash
    npm install
-
-# or
-
-yarn
-npm run dev
-
-# or
-
-yarn dev
+   npm run dev
+   ```
