@@ -5,7 +5,7 @@ import Level1 from "./components/Level1";
 import Level2 from "./components/Level2";
 import Level3 from "./components/Level3";
 import ResumeModal from "./components/ResumeModal";
-// ThemeProvider is now in main.jsx
+import { CONFIG } from "./gameConfig"; // <--- Import CONFIG
 
 function App() {
   const [appState, setAppState] = useState("LOGIN");
@@ -52,6 +52,27 @@ function App() {
     return () => clearInterval(countdownInterval);
   }, [isActive, timeLeft, isLocked]);
 
+  // --- Tab Switch / Visibility Security ---
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      // Trigger lock if user leaves the tab (document.hidden) while game is active
+      if (
+        document.hidden &&
+        appState === "GAME" &&
+        !isDisqualified &&
+        !isLocked
+      ) {
+        setIsLocked(true);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [appState, isDisqualified, isLocked]);
+
   const handleAdminReset = () => {
     // Clear LocalStorage Configs
     localStorage.removeItem("dd_game_configured");
@@ -87,7 +108,7 @@ function App() {
 
   // --- RENDERING ---
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300 text-gray-900 dark:text-gray-100 font-sans">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 to-white dark:from-gray-900 dark:to-blue-900 transition-colors duration-300 text-gray-900 dark:text-gray-100 font-sans">
       {appState === "LOGIN" && (
         <AdminLogin onLoginSuccess={() => setAppState("SETUP")} />
       )}
@@ -107,7 +128,15 @@ function App() {
 
       {appState === "GAME" && (
         <>
-          {isLocked && <ResumeModal onResume={() => setIsLocked(false)} />}
+          {/* UPDATED: Apply penalty when resuming from Lock (Refresh or Tab Switch) */}
+          {isLocked && (
+            <ResumeModal
+              onResume={() => {
+                setIsLocked(false);
+                handlePenalty(CONFIG.refreshPenalty || 60);
+              }}
+            />
+          )}
 
           {isDisqualified && (
             <div className="fixed inset-0 z-50 bg-gray-900 flex items-center justify-center p-6 text-center animate-fade-in">

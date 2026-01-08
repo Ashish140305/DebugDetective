@@ -69,7 +69,7 @@ const DetectiveLayout = ({ children, title, timer, penalty, onAdminReset }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-slate-900 dark:text-gray-100 font-sans transition-colors duration-300">
+    <div className="min-h-screen bg-transparent text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
       {/* RESET MODAL */}
       {showResetModal && (
         <div className="fixed inset-0 z-60 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">

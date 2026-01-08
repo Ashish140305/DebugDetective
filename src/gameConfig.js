@@ -27,6 +27,9 @@ export const CONFIG = {
   incorrectPenalty: 30,
   skipPenalty: 15,
 
+  // --- NEW: Security Settings ---
+  refreshPenalty: 300, // Penalty (in seconds) for Refresh or Tab Switch
+
   // Level 3 Topics
   researchTopics: [
     "APIs and Web Architecture",

@@ -44,7 +44,7 @@ const AdminLogin = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-slate-900 transition-colors duration-300">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-transparent transition-colors duration-300">
       {/* Theme Toggle */}
       <button
         onClick={toggleTheme}
