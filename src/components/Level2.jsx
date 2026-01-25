@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  RefreshCw,
-  CheckCircle2,
-  Lightbulb,
-  Code2,
-  HelpCircle,
   Play,
+  SkipForward,
+  HelpCircle,
+  Code,
+  Terminal,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import DetectiveLayout from "./DetectiveLayout";
 import { checkSimilarity } from "../utils/fuzzyMatch";
@@ -21,63 +22,31 @@ const Level2 = ({
 }) => {
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [questionData, setQuestionData] = useState(null);
-
-  // Stores values for code blanks: { 0: "val", 1: "val" }
   const [codeInputs, setCodeInputs] = useState({});
   const [triviaAnswer, setTriviaAnswer] = useState("");
-
-  const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState(null);
   const [showHint, setShowHint] = useState(false);
 
-  // --- LOGGING ---
-  const logToConsole = (q, a, type = "NEW") => {
-    const timestamp = new Date().toLocaleTimeString();
-
-    // Clearer styling for visibility
-    console.log(
-      `%c 🕵️ DETECTIVE LOG [${timestamp}] \n%c❓ Q: ${q}\n%c✅ A: ${a}`,
-      "color: #888; font-weight: bold;",
-      "color: #d97706; font-weight: bold; font-size: 1.1em;", // Orange for Question
-      "color: #059669; font-weight: bold; font-size: 1.2em;" // Green for Answer
-    );
-
-    const logEntry = `[${timestamp}] [${type}] Q: ${q} | A: ${a}`;
-    const history = JSON.parse(
-      sessionStorage.getItem("dd_console_history") || "[]"
-    );
-    history.push(logEntry);
-    sessionStorage.setItem("dd_console_history", JSON.stringify(history));
-  };
-
-  useEffect(() => {
-    const history = JSON.parse(
-      sessionStorage.getItem("dd_console_history") || "[]"
-    );
-    if (history.length > 0) {
-      console.log("%c--- PREVIOUS LOGS ---", "color: #666");
-      history.forEach((entry) => console.log(entry));
-    }
-  }, []);
-
-  // --- PARSING SNIPPETS ---
   const snippetParts = useMemo(() => {
     if (!questionData?.codeSnippet) return [];
-    // Split by underscores to find blanks
     return questionData.codeSnippet.split(/(_+)/);
   }, [questionData]);
 
-  // --- FETCH Logic ---
   const fetchQuestion = () => {
-    setLoading(true);
+    setFeedback("loading");
     setShowHint(false);
     setCodeInputs({});
     setTriviaAnswer("");
-    setFeedback(null);
 
     setTimeout(() => {
       const randomIndex = Math.floor(Math.random() * QUESTIONS.length);
       const randomQ = QUESTIONS[randomIndex];
+
+      // RESTORED: Log the answer to the console
+      console.log(
+        `%c[DEBUG_LOG] Expected Answer: "${randomQ.answer}"`,
+        "color: #4cc9f0; font-weight: bold; font-size: 12px;",
+      );
 
       setQuestionData({
         type: randomQ.type,
@@ -86,40 +55,18 @@ const Level2 = ({
         answer: randomQ.answer,
         hint: randomQ.hint,
       });
-
-      logToConsole(
-        randomQ.question,
-        randomQ.answer,
-        `${randomQ.type.toUpperCase()} Q (${currentQIndex + 1})`
-      );
-
-      setLoading(false);
-    }, 300);
+      setFeedback(null);
+    }, 600);
   };
 
   useEffect(() => {
     const savedIndex = sessionStorage.getItem("dd_q_index");
-    if (savedIndex) {
-      setCurrentQIndex(parseInt(savedIndex));
-      if (sessionStorage.getItem("dd_page_refreshed")) {
-        onPenalty(300);
-        sessionStorage.removeItem("dd_page_refreshed");
-      }
-    }
-    const handleUnload = () =>
-      sessionStorage.setItem("dd_page_refreshed", "true");
-    window.addEventListener("beforeunload", handleUnload);
-
+    if (savedIndex) setCurrentQIndex(parseInt(savedIndex));
     fetchQuestion();
-
-    return () => window.removeEventListener("beforeunload", handleUnload);
   }, []);
 
   const handleCodeInputChange = (index, value) => {
-    setCodeInputs((prev) => ({
-      ...prev,
-      [index]: value,
-    }));
+    setCodeInputs((prev) => ({ ...prev, [index]: value }));
   };
 
   const handleSubmit = (e) => {
@@ -129,37 +76,21 @@ const Level2 = ({
     let isCorrect = false;
 
     if (questionData.type === "code") {
-      // 1. EXTRACT USER INPUT
       const userResponse = snippetParts
-        .map((part, index) => {
-          if (part.startsWith("_")) {
-            return codeInputs[index] || "";
-          }
-          return null;
-        })
+        .map((part, index) =>
+          part.startsWith("_") ? codeInputs[index] || "" : null,
+        )
         .filter((val) => val !== null)
-        .join("") // Join inputs if multiple blanks exist
+        .join("")
         .trim();
 
-      if (!userResponse) {
-        setFeedback("blank");
-        setTimeout(() => setFeedback(null), 2000);
-        return;
-      }
-
-      // 2. CLEANUP & COMPARE
-      const cleanUserResponse = userResponse.replace(/[;)]+$/, "");
-      const cleanAnswer = questionData.answer.trim();
-
-      // Check similarity on the ANSWER ONLY
-      isCorrect = checkSimilarity(cleanUserResponse, cleanAnswer, 0.85);
+      const cleanResponse = userResponse.replace(/[;)]+$/, "");
+      isCorrect = checkSimilarity(
+        cleanResponse,
+        questionData.answer.trim(),
+        0.85,
+      );
     } else {
-      // Trivia
-      if (!triviaAnswer.trim()) {
-        setFeedback("blank");
-        setTimeout(() => setFeedback(null), 2000);
-        return;
-      }
       isCorrect = checkSimilarity(triviaAnswer, questionData.answer, 0.8);
     }
 
@@ -169,7 +100,6 @@ const Level2 = ({
         const nextIndex = currentQIndex + 1;
         if (nextIndex >= (CONFIG.questionsToSolve || 10)) {
           onSolve();
-          sessionStorage.removeItem("dd_q_index");
         } else {
           setCurrentQIndex(nextIndex);
           sessionStorage.setItem("dd_q_index", nextIndex);
@@ -179,7 +109,7 @@ const Level2 = ({
     } else {
       setFeedback("error");
       onPenalty(CONFIG.incorrectPenalty || 30);
-      setTimeout(() => setFeedback(null), 2000);
+      setTimeout(() => setFeedback(null), 1500);
     }
   };
 
@@ -189,180 +119,136 @@ const Level2 = ({
   };
 
   const totalQ = CONFIG.questionsToSolve || 10;
-  const progressPercent = (currentQIndex / totalQ) * 100;
+
+  if (!questionData)
+    return (
+      <div className="flex h-64 items-center justify-center text-white">
+        Loading Quest...
+      </div>
+    );
 
   return (
     <DetectiveLayout
-      title="Level 2: Code Decryption Protocol"
+      title={`Stage ${currentQIndex + 1}/${totalQ}`}
       timer={timerDisplay}
       penalty={onPenaltyAmount}
       onAdminReset={onAdminReset}
     >
-      <div className="space-y-8">
-        {/* Progress */}
-        <div>
-          <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-2 font-medium">
-            <span>System Integrity</span>
-            <span>
-              {currentQIndex} / {totalQ} Patched
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
-            <div
-              className="bg-blue-600 h-full transition-all duration-500"
-              style={{ width: `${progressPercent}%` }}
-            ></div>
-          </div>
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Progress Bar */}
+        <div className="w-full bg-gray-700 h-4 rounded-full overflow-hidden border border-gray-600">
+          <div
+            className="bg-gradient-to-r from-arcade-primary to-orange-500 h-full transition-all duration-500"
+            style={{ width: `${(currentQIndex / totalQ) * 100}%` }}
+          ></div>
         </div>
 
-        {/* Question Area - Increased min-height for better look */}
-        <div className="min-h-50">
-          {loading ? (
-            <div className="flex items-center justify-center h-64 text-gray-400 gap-2">
-              <RefreshCw className="animate-spin" /> Fetching corrupted
-              segment...
+        {/* Question Card */}
+        <div className="bg-[#0f1524] rounded-2xl p-6 border-2 border-arcade-secondary shadow-inner relative">
+          <div className="absolute -top-3 -left-3 bg-arcade-accent text-black font-bold px-3 py-1 rounded-lg shadow-md transform -rotate-2 font-game uppercase">
+            {questionData.type === "code" ? "Bug Fix" : "Knowledge Check"}
+          </div>
+
+          <h3 className="text-xl md:text-2xl font-bold text-gray-100 mt-4 mb-6 leading-relaxed font-body">
+            {questionData.question}
+          </h3>
+
+          {questionData.type === "code" ? (
+            <div className="bg-[#1e1e1e] rounded-xl p-4 font-mono text-gray-300 border border-gray-700 overflow-x-auto shadow-2xl">
+              <pre className="whitespace-pre-wrap leading-loose">
+                {snippetParts.map((part, index) => {
+                  if (part.startsWith("_")) {
+                    const val = codeInputs[index] || "";
+                    return (
+                      <input
+                        key={index}
+                        type="text"
+                        value={val}
+                        onChange={(e) =>
+                          handleCodeInputChange(index, e.target.value)
+                        }
+                        style={{
+                          width: `${Math.max(val.length, part.length) + 1}ch`,
+                        }}
+                        className={`bg-gray-800 border-b-2 outline-none text-center text-arcade-success font-bold mx-1 rounded-t focus:bg-gray-700 transition-colors ${feedback === "error" ? "border-red-500" : "border-arcade-success"}`}
+                        autoComplete="off"
+                      />
+                    );
+                  }
+                  return (
+                    <span key={index} className="text-purple-300">
+                      {part}
+                    </span>
+                  );
+                })}
+              </pre>
             </div>
-          ) : (
-            <div className="animate-fade-in space-y-6">
-              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm font-semibold uppercase tracking-wider">
-                {questionData.type === "code" ? (
-                  <Code2 size={16} />
-                ) : (
-                  <HelpCircle size={16} />
-                )}
-                {questionData.type === "code"
-                  ? "Syntax Error Detected"
-                  : "Security Challenge"}
-              </div>
+          ) : questionData.codeSnippet ? (
+            <div className="bg-[#1e1e1e] rounded-xl p-4 font-mono text-gray-300 border border-gray-700 mb-4">
+              <pre>{questionData.codeSnippet}</pre>
+            </div>
+          ) : null}
+        </div>
 
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white leading-snug">
-                {questionData.question}
-              </h3>
-
-              {questionData.type === "code" ? (
-                // --- INLINE CODE EDITOR ---
-                <div className="bg-gray-100 dark:bg-slate-900 p-8 rounded-xl border border-gray-200 dark:border-slate-700 font-mono text-lg text-gray-800 dark:text-gray-200 shadow-inner overflow-x-auto">
-                  <pre className="whitespace-pre-wrap leading-relaxed">
-                    {snippetParts.map((part, index) => {
-                      if (part.startsWith("_")) {
-                        const val = codeInputs[index] || "";
-                        // Dynamic width: max(length of current val, length of placeholder/minimum) + buffer
-                        const minLength = Math.max(part.length, 3);
-                        const currentLength = val.length;
-                        const widthCh = Math.max(minLength, currentLength) + 1;
-
-                        return (
-                          <input
-                            key={index}
-                            type="text"
-                            value={val}
-                            onChange={(e) =>
-                              handleCodeInputChange(index, e.target.value)
-                            }
-                            // Apply dynamic width in 'ch' units
-                            style={{ width: `${widthCh}ch` }}
-                            placeholder="___"
-                            className={`
-                              bg-transparent border-b-2 outline-none text-center mx-1 transition-all duration-200
-                              font-bold text-blue-700 dark:text-blue-400 placeholder-gray-300 dark:placeholder-gray-700
-                              ${
-                                feedback === "error"
-                                  ? "border-red-500 bg-red-50/50"
-                                  : "border-gray-400 focus:border-blue-500"
-                              }
-                            `}
-                            autoComplete="off"
-                          />
-                        );
-                      }
-                      return <span key={index}>{part}</span>;
-                    })}
-                  </pre>
-                </div>
-              ) : (
-                // --- TRIVIA VIEW ---
-                questionData.codeSnippet && (
-                  <div className="bg-gray-100 dark:bg-slate-900 p-6 rounded-xl border border-gray-200 dark:border-slate-700 font-mono text-base text-gray-800 dark:text-gray-200">
-                    <pre>{questionData.codeSnippet}</pre>
-                  </div>
-                )
+        {/* Input & Actions */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {questionData.type !== "code" && (
+            <div className="relative">
+              <input
+                type="text"
+                value={triviaAnswer}
+                onChange={(e) => setTriviaAnswer(e.target.value)}
+                placeholder="Type your answer here..."
+                className={`input-game text-lg ${feedback === "error" ? "border-red-500 bg-red-900/10" : ""} ${feedback === "success" ? "border-green-500 bg-green-900/10" : ""}`}
+                autoFocus
+              />
+              {feedback === "success" && (
+                <CheckCircle2 className="absolute right-4 top-4 text-green-500" />
+              )}
+              {feedback === "error" && (
+                <XCircle className="absolute right-4 top-4 text-red-500" />
               )}
             </div>
           )}
-        </div>
 
-        {/* Action Area */}
-        <div className="border-t border-gray-100 dark:border-slate-700 pt-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {questionData?.type !== "code" && (
-              <div className="relative">
-                <input
-                  type="text"
-                  value={triviaAnswer}
-                  onChange={(e) => setTriviaAnswer(e.target.value)}
-                  placeholder="Type your answer..."
-                  autoFocus
-                  className={`w-full text-lg px-4 py-3 border-2 rounded-lg outline-none transition-all dark:bg-slate-900 dark:text-white ${
-                    feedback === "error"
-                      ? "border-red-500 bg-red-50 dark:bg-red-900/20"
-                      : feedback === "success"
-                      ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                      : "border-gray-300 dark:border-slate-600 focus:border-blue-500"
-                  }`}
-                />
-                {feedback === "success" && (
-                  <CheckCircle2 className="absolute right-4 top-4 text-green-600 animate-bounce" />
-                )}
-              </div>
-            )}
-
-            <div className="flex items-center justify-between">
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  onClick={handleSkip}
-                  className="text-sm font-medium text-gray-400 hover:text-red-500 transition-colors"
-                >
-                  Skip Patch (-{CONFIG.skipPenalty || 15}s)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowHint(!showHint)}
-                  className="text-sm font-medium text-blue-500 hover:text-blue-700 dark:text-blue-400 transition-colors flex items-center gap-1"
-                >
-                  <Lightbulb size={14} />{" "}
-                  {showHint ? "Hide Hint" : "Analyze Hint"}
-                </button>
-              </div>
-
+          <div className="flex flex-col-reverse md:flex-row gap-4 items-center justify-between pt-4">
+            <div className="flex gap-3 w-full md:w-auto">
               <button
-                type="submit"
-                disabled={loading || feedback === "success"}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-sm disabled:opacity-50 transition-all flex items-center gap-2"
+                type="button"
+                onClick={handleSkip}
+                className="btn-game-secondary w-full md:w-auto text-sm flex items-center justify-center gap-2"
               >
-                {questionData?.type === "code" ? <Play size={18} /> : null}
-                {questionData?.type === "code" ? "Execute Fix" : "Submit"}
+                <SkipForward size={18} /> Skip (-{CONFIG.skipPenalty}s)
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowHint(!showHint)}
+                className="btn-game-secondary w-full md:w-auto text-sm bg-yellow-600/20 text-yellow-500 border border-yellow-600/50 hover:bg-yellow-600/40 flex items-center justify-center gap-2"
+              >
+                <HelpCircle size={18} /> Hint
               </button>
             </div>
-          </form>
 
-          {showHint && questionData?.hint && (
-            <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200 rounded-md text-sm">
-              <strong>Hint:</strong> {questionData.hint}
-            </div>
-          )}
+            <button
+              type="submit"
+              className="btn-game w-full md:w-auto flex items-center justify-center gap-2 min-w-[150px]"
+            >
+              {feedback === "loading" ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <Play size={20} fill="currentColor" /> Submit
+                </>
+              )}
+            </button>
+          </div>
+        </form>
 
-          {feedback === "error" && (
-            <div className="mt-2 text-red-600 dark:text-red-400 text-sm font-medium">
-              Error: Patch failed. Integrity mismatch. Time penalty applied.
-            </div>
-          )}
-          {feedback === "blank" && (
-            <div className="mt-2 text-orange-500 text-sm font-medium">
-              Please input data before executing.
-            </div>
-          )}
-        </div>
+        {showHint && questionData.hint && (
+          <div className="bg-yellow-900/30 border border-yellow-600/50 p-4 rounded-xl text-yellow-200 font-body animate-bounce-short">
+            💡 <strong>Hint:</strong> {questionData.hint}
+          </div>
+        )}
       </div>
     </DetectiveLayout>
   );

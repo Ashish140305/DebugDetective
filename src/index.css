@@ -1,30 +1,81 @@
 @import "tailwindcss";
-@custom-variant dark (&:where(.dark, .dark *));
 
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;700&family=Nunito:wght@400;700;900&display=swap');
+
+@theme {
+  /* -- Fonts -- */
+  --font-game: "Chakra Petch", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-body: "Nunito", sans-serif;
+
+  /* -- Colors -- */
+  --color-arcade-bg: #1a1a2e;
+  --color-arcade-card: #16213e;
+  --color-arcade-primary: #e94560;
+  --color-arcade-secondary: #0f3460;
+  --color-arcade-accent: #ffd700;
+  --color-arcade-success: #4cc9f0;
+
+  /* -- Shadows -- */
+  --shadow-game-card: 0 8px 0 rgba(0, 0, 0, 0.5);
+  --shadow-game-btn: 0 6px 0 #9d162e;
+  --shadow-game-input: inset 0 4px 8px rgba(0, 0, 0, 0.3);
+
+  /* -- Animations -- */
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-bounce-short: bounce-short 0.5s infinite;
+
+  @keyframes float {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes bounce-short {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+}
+
+/* -- Base Styles -- */
 @layer base {
   body {
-    background-color: #f9fafb;
-    /* Light Gray Background */
-    color: #111827;
-    /* Dark Gray Text */
-    font-family: system-ui, -apple-system, sans-serif;
+    background: radial-gradient(circle at 50% 50%, #1f2a48 0%, #1a1a2e 100%);
+    background-color: var(--color-arcade-bg);
+    color: white;
+    font-family: var(--font-body);
+    overflow-x: hidden;
   }
 }
 
-@layer utilities {
-  .animate-fade-in {
-    animation: fadeIn 0.3s ease-out;
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+/* -- Component Classes -- */
+@layer components {
+  .game-card {
+    @apply bg-arcade-card rounded-2xl border-4 border-arcade-secondary shadow-game-card relative overflow-hidden;
   }
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  .btn-game {
+    @apply px-6 py-3 bg-arcade-primary text-white font-game font-bold text-lg rounded-xl shadow-game-btn transform transition-all active:translate-y-1 active:shadow-none hover:-translate-y-0.5 uppercase tracking-wide;
+  }
+
+  .btn-game-secondary {
+    @apply px-6 py-3 bg-arcade-secondary text-gray-200 font-game font-bold text-lg rounded-xl shadow-[0_6px_0_#0a1f38] transform transition-all active:translate-y-1 active:shadow-none hover:-translate-y-0.5;
+  }
+
+  .input-game {
+    @apply bg-[#0f1524] rounded-xl border-2 border-arcade-secondary p-4 text-white font-mono shadow-game-input focus:border-arcade-primary focus:outline-none transition-colors w-full;
   }
 }

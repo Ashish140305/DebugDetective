@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Confetti from "react-confetti";
-import { Trophy, Send, Check } from "lucide-react";
+import { Trophy, Send, Star, Home } from "lucide-react";
 import DetectiveLayout from "./DetectiveLayout";
 import { CONFIG } from "../gameConfig";
 
@@ -18,62 +18,75 @@ const Level3 = ({ finalTime, onAdminReset }) => {
   }, []);
 
   return (
-    <DetectiveLayout
-      title="Mission Complete"
-      onAdminReset={onAdminReset} // <--- Passed to Layout
-    >
-      {!submitted && <Confetti recycle={false} numberOfPieces={300} />}
+    <DetectiveLayout title="Victory!" onAdminReset={onAdminReset}>
+      <Confetti
+        recycle={true}
+        numberOfPieces={200}
+        colors={["#e94560", "#ffd700", "#4cc9f0"]}
+      />
 
-      <div className="text-center space-y-6">
-        <div className="flex flex-col items-center">
-          <div className="bg-green-100 dark:bg-green-900/30 p-4 rounded-full text-green-600 dark:text-green-400 mb-4">
-            <Trophy size={40} />
+      <div className="text-center space-y-8 animate-float">
+        <div className="relative inline-block mt-8">
+          <div className="absolute inset-0 bg-yellow-500 blur-3xl opacity-20"></div>
+          <Trophy
+            size={100}
+            className="text-arcade-accent filter drop-shadow-[0_0_15px_rgba(255,215,0,0.5)]"
+          />
+          <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex gap-1">
+            <Star className="text-arcade-accent fill-arcade-accent" size={24} />
+            <Star className="text-arcade-accent fill-arcade-accent" size={32} />
+            <Star className="text-arcade-accent fill-arcade-accent" size={24} />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            All Systems Unlocked
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400">
-            Completed in{" "}
-            <span className="font-mono font-bold text-gray-900 dark:text-white">
-              {finalTime}
-            </span>
-          </p>
         </div>
 
-        <div className="bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg p-6 text-left">
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-            Final Assignment
-          </span>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-1 mb-4">
-            {topic}
+        <div>
+          <h2 className="text-5xl font-game font-black text-white uppercase tracking-wider mb-2 text-shadow">
+            Level Complete
+          </h2>
+          <div className="inline-block bg-white/10 px-6 py-2 rounded-full border border-white/20">
+            <p className="text-xl font-body">
+              Time:{" "}
+              <span className="font-bold text-arcade-success">{finalTime}</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-[#0f1524] p-8 rounded-2xl border-2 border-arcade-secondary max-w-2xl mx-auto shadow-xl text-left">
+          <h3 className="text-xl font-bold text-arcade-accent mb-2 font-game uppercase">
+            Bonus Quest: Research Log
           </h3>
+          <p className="text-gray-400 mb-6 font-body">
+            Before you claim your prize, quickly document your findings on:{" "}
+            <br />
+            <span className="text-white font-bold text-lg">{topic}</span>
+          </p>
 
           {!submitted ? (
             <div className="space-y-4">
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Please provide a brief outline of the topic above:
-              </p>
               <textarea
                 value={report}
                 onChange={(e) => setReport(e.target.value)}
-                placeholder="Write your outline here..."
-                className="w-full h-32 p-3 border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                placeholder="Write your research notes here..."
+                className="w-full h-32 p-4 bg-gray-800 rounded-xl border border-gray-600 text-white focus:border-arcade-primary outline-none transition-colors resize-none font-body"
               />
               <button
                 onClick={() => setSubmitted(true)}
                 disabled={report.length < 10}
-                className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                className="btn-game w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none disabled:translate-y-0"
               >
-                <Send size={18} /> Submit Report
+                <Send size={20} /> Finish Game
               </button>
             </div>
           ) : (
             <div className="text-center py-8">
-              <div className="inline-flex items-center gap-2 text-green-600 dark:text-green-400 font-bold text-lg mb-4">
-                <Check size={24} /> Report Submitted
+              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                <Home className="text-white" size={32} />
               </div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">
-                Thank you for your participation.
+              <h3 className="text-2xl font-bold text-white mb-2">
+                Quest Complete!
+              </h3>
+              <p className="text-gray-400">
+                Please wait for the administrator.
               </p>
             </div>
           )}

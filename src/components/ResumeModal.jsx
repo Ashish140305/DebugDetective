@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ShieldAlert, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 
 const ResumeModal = ({ onResume }) => {
   const [pin, setPin] = useState("");
@@ -7,9 +7,7 @@ const ResumeModal = ({ onResume }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Retrieve the admin pin set during setup
     const correctPin = localStorage.getItem("dd_resume_pin");
-
     if (pin === correctPin) {
       onResume();
     } else {
@@ -19,36 +17,34 @@ const ResumeModal = ({ onResume }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-100 bg-black/90 flex items-center justify-center p-4 backdrop-blur-md">
-      <div className="bg-white dark:bg-slate-900 p-8 rounded-xl shadow-2xl max-w-md w-full text-center border-2 border-red-500">
-        <ShieldAlert
-          size={64}
-          className="mx-auto text-red-500 mb-4 animate-pulse"
-        />
+    <div className="fixed inset-0 z-100 bg-arcade-bg/95 flex items-center justify-center p-4">
+      <div className="bg-arcade-card p-8 rounded-2xl border-4 border-gray-700 shadow-2xl max-w-sm w-full text-center">
+        <div className="bg-gray-700 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Lock size={32} className="text-gray-300" />
+        </div>
 
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          SESSION LOCKED
-        </h1>
-        <p className="text-gray-600 dark:text-gray-300 mb-6">
-          A refresh or tab switch was detected.
-          <br />
-          <strong>Call an Organizer to unlock this terminal.</strong>
-        </p>
+        <h2 className="text-3xl font-game font-bold text-white mb-2">
+          Game Paused
+        </h2>
+        <p className="text-gray-400 mb-8">Enter Admin PIN to Resume</p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit}>
           <input
             type="password"
             value={pin}
             onChange={(e) => setPin(e.target.value)}
-            placeholder="Enter Admin PIN"
-            className="w-full text-center text-2xl tracking-[0.5em] font-mono p-3 rounded border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white uppercase"
+            className="input-game text-center text-2xl tracking-widest mb-4"
             autoFocus
+            placeholder="••••"
           />
+          {error && (
+            <p className="text-red-500 font-bold mb-4 animate-bounce">
+              Incorrect PIN
+            </p>
+          )}
 
-          {error && <p className="text-red-500 font-bold">ACCESS DENIED</p>}
-
-          <button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded transition-colors">
-            UNLOCK SYSTEM
+          <button className="btn-game w-full bg-gray-600 shadow-[0_6px_0_#374151]">
+            Unlock
           </button>
         </form>
       </div>
