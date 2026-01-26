@@ -1,87 +1,78 @@
 import React, { useState, useEffect } from "react";
-import { KeyRound, ArrowRight, Map } from "lucide-react";
+import { Lock, Unlock, ArrowRight } from "lucide-react";
 import DetectiveLayout from "./DetectiveLayout";
+import { updateTeamProgress } from "../appwrite";
 
-const Level1 = ({ onUnlock, onAdminReset }) => {
-  const [pin, setPin] = useState("");
+const Level1 = ({ onUnlock, onAdminReset, pcId }) => {
+  const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
+  const [targetPassword, setTargetPassword] = useState("");
 
-  const PC_ID = localStorage.getItem("dd_pc_id") || "PLAYER_1";
-  const CORRECT_PASSWORD = localStorage.getItem("dd_l1_ans") || "";
-
-  // RESTORED: Log the answer to the console for "debugging"
   useEffect(() => {
-    console.log(
-      `%c[DEBUG_LOG] Level 1 Access Key: ${CORRECT_PASSWORD}`,
-      "color: #e94560; font-weight: bold; font-size: 14px;",
-    );
-  }, [CORRECT_PASSWORD]);
+    const storedPass = localStorage.getItem("dd_level1_target");
+    if (storedPass) setTargetPassword(storedPass);
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (pin.trim().toUpperCase() === CORRECT_PASSWORD.toUpperCase()) {
+    if (!targetPassword) return;
+
+    if (password.trim() === targetPassword) {
+      const docId = localStorage.getItem("dd_doc_id");
+      if (docId) updateTeamProgress(docId, 2, 0);
       onUnlock();
     } else {
       setError(true);
-      setPin("");
-      setTimeout(() => setError(false), 2000);
+      setTimeout(() => setError(false), 1000);
+      setPassword("");
     }
   };
 
   return (
-    <DetectiveLayout title="Start Game" onAdminReset={onAdminReset}>
-      <div className="flex flex-col items-center justify-center h-full gap-8 py-8">
-        <div className="relative">
-          <div
-            className={`w-32 h-32 bg-arcade-secondary rounded-full flex items-center justify-center border-4 border-dashed border-gray-500 ${error ? "animate-shake bg-red-900/50 border-red-500" : "animate-float"}`}
-          >
-            <KeyRound
-              size={64}
-              className={error ? "text-red-400" : "text-arcade-accent"}
-            />
-          </div>
-          {error && (
-            <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-red-500 text-white font-bold px-4 py-1 rounded-lg whitespace-nowrap animate-bounce">
-              Wrong Key!
+    <DetectiveLayout
+      title="Security Breach: Level 1"
+      timer="∞"
+      onAdminReset={onAdminReset}
+      pcId={pcId}
+    >
+      <div className="flex flex-col items-center justify-center h-full min-h-[50vh] max-w-2xl mx-auto">
+        <div className="bg-arcade-card p-8 rounded-2xl border border-gray-700 w-full text-center relative overflow-hidden shadow-2xl">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-arcade-primary to-transparent opacity-50"></div>
+          <div className="mb-8 flex justify-center">
+            <div
+              className={`p-6 rounded-full transition-all duration-300 ${error ? "bg-red-900/50 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.5)]" : "bg-blue-900/30 text-arcade-primary shadow-[0_0_20px_rgba(76,201,240,0.3)]"}`}
+            >
+              {error ? <Lock size={64} /> : <Unlock size={64} />}
             </div>
-          )}
-        </div>
-
-        <div className="text-center space-y-2 max-w-lg">
-          <h2 className="text-3xl font-game font-bold text-white">
-            Welcome, <span className="text-arcade-success">{PC_ID}</span>
+          </div>
+          <h2 className="text-3xl font-game text-white mb-4 tracking-wider">
+            System Locked
           </h2>
-          <p className="text-gray-400 font-body text-lg">
-            To begin your quest, find the{" "}
-            <span className="text-arcade-accent font-bold">Hidden Key</span>{" "}
-            located physically near this station.
+          <p className="text-gray-400 font-mono text-sm mb-10 leading-relaxed">
+            Enter the authorization code provided by your handler to initiate
+            the override protocol.
           </p>
-          <p className="text-xs text-gray-600 font-mono mt-2 animate-pulse">
-            (Psst... check the developer console)
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="w-full max-w-md relative">
-          <div className="relative group">
+          <form onSubmit={handleSubmit} className="relative max-w-md mx-auto">
             <input
               type="text"
-              value={pin}
-              onChange={(e) => setPin(e.target.value)}
-              placeholder="ENTER KEY CODE"
-              className="input-game text-center text-2xl tracking-[0.2em] font-game uppercase pr-14"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={`w-full bg-black/50 border-2 rounded-xl px-6 py-4 text-center text-xl font-mono text-white tracking-[0.2em] focus:outline-none transition-all placeholder:tracking-normal placeholder:text-gray-600 ${error ? "border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)] animate-shake" : "border-arcade-secondary focus:border-arcade-primary focus:shadow-[0_0_15px_rgba(76,201,240,0.3)]"}`}
+              placeholder="ENTER PASSCODE"
               autoFocus
             />
             <button
               type="submit"
-              className="absolute right-2 top-2 bottom-2 bg-arcade-primary text-white rounded-lg px-4 hover:bg-opacity-90 transition-all shadow-md active:translate-y-0.5 active:shadow-none"
+              className="absolute right-2 top-2 bottom-2 aspect-square bg-arcade-primary text-black rounded-lg flex items-center justify-center hover:bg-white hover:scale-105 transition-all"
             >
               <ArrowRight size={24} />
             </button>
-          </div>
-        </form>
-
-        <div className="flex items-center gap-2 text-gray-500 text-sm font-bold uppercase tracking-widest mt-4">
-          <Map size={16} /> Location: Physical Lab Environment
+          </form>
+          {error && (
+            <p className="mt-6 text-red-400 font-bold text-sm tracking-widest uppercase animate-pulse">
+              Access Denied: Invalid Credentials
+            </p>
+          )}
         </div>
       </div>
     </DetectiveLayout>

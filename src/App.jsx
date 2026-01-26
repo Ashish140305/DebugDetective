@@ -1,37 +1,146 @@
 import React, { useState, useEffect } from "react";
 import AdminLogin from "./components/AdminLogin";
-import AdminSetup from "./components/AdminSetup";
+import CentralAdminDashboard from "./components/CentralAdminDashboard";
+import WaitingRoom from "./components/WaitingRoom";
 import Level1 from "./components/Level1";
 import Level2 from "./components/Level2";
 import Level3 from "./components/Level3";
 import ResumeModal from "./components/ResumeModal";
 import { CONFIG } from "./gameConfig";
+import {
+  setTeamLockStatus,
+  subscribeToSessionDeletion,
+  subscribeToTeamStatus,
+  getGameConfig,
+} from "./appwrite";
+import { Loader2 } from "lucide-react";
 
 function App() {
   const [appState, setAppState] = useState("LOGIN");
-  const [level, setLevel] = useState(1);
+  const [currentPcId, setCurrentPcId] = useState("");
+
+  const [level, setLevel] = useState(() => {
+    const saved = localStorage.getItem("dd_level");
+    return saved ? parseInt(saved) : 1;
+  });
+
   const [isLocked, setIsLocked] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(1500); // State will be hydrated
+  const [timeLeft, setTimeLeft] = useState(1500);
   const [isActive, setIsActive] = useState(false);
   const [penaltySeconds, setPenaltySeconds] = useState(0);
   const [isDisqualified, setIsDisqualified] = useState(false);
 
-  // Initialize timer from storage to prevent reset on refresh
+  // RESET PENDING STATE
+  const [isResetPending, setIsResetPending] = useState(() => {
+    return localStorage.getItem("dd_reset_pending") === "true";
+  });
+
+  // --- INITIAL CHECK: Are we stuck in "Waiting" state? ---
   useEffect(() => {
-    const saved = sessionStorage.getItem("dd_timer_remaining");
-    if (saved) setTimeLeft(parseInt(saved, 10));
+    const checkResetStatus = async () => {
+      if (isResetPending) {
+        const pcId = localStorage.getItem("dd_pc_id");
+        if (pcId) {
+          const conf = await getGameConfig(pcId);
+          // If Admin already approved it (reset_requested is false)
+          if (conf && conf.reset_requested === false) {
+            performLocalReset();
+          }
+        }
+      }
+    };
+    checkResetStatus();
+  }, [isResetPending]);
+
+  // Helper to clear everything and reload
+  const performLocalReset = () => {
+    localStorage.removeItem("dd_reset_pending");
+    localStorage.removeItem("dd_trigger_lock_on_load");
+    localStorage.removeItem("dd_q_index");
+    localStorage.removeItem("dd_timer_remaining");
+    localStorage.removeItem("dd_level");
+    window.location.reload();
+  };
+
+  // --- LISTENERS ---
+  useEffect(() => {
+    const docId = localStorage.getItem("dd_doc_id");
+
+    if ((appState === "GAME" || appState === "WAITING") && docId) {
+      // 1. Deletion
+      const unsubDelete = subscribeToSessionDeletion(docId, () => {
+        alert(
+          "⚠️ SESSION TERMINATED \n\nAdministrator has removed this game session.",
+        );
+        handleAdminReset();
+      });
+
+      // 2. Real-time Reset Approval
+      const unsubUpdate = subscribeToTeamStatus(docId, (payload) => {
+        if (payload.reset_requested === false && payload.current_level === 1) {
+          if (isResetPending || level > 1) {
+            performLocalReset();
+          }
+        }
+      });
+
+      return () => {
+        unsubDelete();
+        unsubUpdate();
+      };
+    }
+  }, [appState, isResetPending, level]);
+
+  // --- LOCK & UNLOAD LOGIC ---
+  useEffect(() => {
+    const wasRefreshed = localStorage.getItem("dd_trigger_lock_on_load");
+    const isPendingLocal = localStorage.getItem("dd_reset_pending") === "true";
+
+    if (wasRefreshed && !isPendingLocal) {
+      if (appState === "GAME") {
+        setIsLocked(true);
+        const docId = localStorage.getItem("dd_doc_id");
+        if (docId) setTeamLockStatus(docId, true);
+      }
+    }
+    localStorage.removeItem("dd_trigger_lock_on_load");
+
+    const handleBeforeUnload = () => {
+      const pending = localStorage.getItem("dd_reset_pending") === "true";
+      if (appState === "GAME" && level < 4 && !pending) {
+        localStorage.setItem("dd_trigger_lock_on_load", "true");
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [appState, level]);
+
+  // --- PERSISTENCE ---
+  useEffect(() => {
+    localStorage.setItem("dd_level", level);
+  }, [level]);
+
+  useEffect(() => {
+    if (sessionStorage.getItem("dd_mode") === "master") {
+      setAppState("MASTER");
+      return;
+    }
+    const configured = localStorage.getItem("dd_game_configured");
+    const storedPcId = localStorage.getItem("dd_pc_id");
+
+    if (storedPcId) setCurrentPcId(storedPcId);
+
+    if (configured && storedPcId) {
+      setAppState("GAME");
+    } else if (storedPcId) {
+      setAppState("WAITING");
+    }
   }, []);
 
   useEffect(() => {
-    const configured = localStorage.getItem("dd_game_configured");
-    if (configured) {
-      setAppState("GAME");
-      if (sessionStorage.getItem("dd_session_active")) {
-        setIsLocked(true);
-      }
-    } else {
-      setAppState("LOGIN");
-    }
+    const saved = sessionStorage.getItem("dd_timer_remaining");
+    if (saved) setTimeLeft(parseInt(saved, 10));
   }, []);
 
   useEffect(() => {
@@ -40,7 +149,7 @@ function App() {
 
   useEffect(() => {
     let countdownInterval = null;
-    if (isActive && timeLeft > 0 && !isLocked) {
+    if (isActive && timeLeft > 0 && !isLocked && !isResetPending) {
       countdownInterval = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
@@ -49,17 +158,23 @@ function App() {
       setIsActive(false);
     }
     return () => clearInterval(countdownInterval);
-  }, [isActive, timeLeft, isLocked]);
+  }, [isActive, timeLeft, isLocked, isResetPending]);
 
+  // Visibility Handler
   useEffect(() => {
-    const handleVisibilityChange = () => {
+    const handleVisibilityChange = async () => {
+      const isPendingLocal =
+        localStorage.getItem("dd_reset_pending") === "true";
       if (
         document.hidden &&
         appState === "GAME" &&
         !isDisqualified &&
-        !isLocked
+        !isLocked &&
+        !isPendingLocal
       ) {
         setIsLocked(true);
+        const docId = localStorage.getItem("dd_doc_id");
+        if (docId) await setTeamLockStatus(docId, true);
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -68,13 +183,16 @@ function App() {
     };
   }, [appState, isDisqualified, isLocked]);
 
-  const handleAdminReset = () => {
-    localStorage.removeItem("dd_game_configured");
-    localStorage.removeItem("dd_pc_id");
-    localStorage.removeItem("dd_l1_ans");
-    localStorage.removeItem("dd_resume_pin");
-    sessionStorage.clear();
-    window.location.reload();
+  const handleStationLogin = (pcId) => {
+    setCurrentPcId(pcId);
+    setAppState("WAITING");
+    setIsLocked(false);
+    localStorage.removeItem("dd_trigger_lock_on_load");
+  };
+
+  const handleMasterLogin = () => {
+    sessionStorage.setItem("dd_mode", "master");
+    setAppState("MASTER");
   };
 
   const handlePenalty = (amount) => {
@@ -91,9 +209,14 @@ function App() {
     return `${mins}:${secs}`;
   };
 
+  const handleAdminReset = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.reload();
+  };
+
   return (
     <div className="min-h-screen relative p-4 md:p-8 flex items-center justify-center">
-      {/* Background Particles/Dots */}
       <div
         className="absolute inset-0 opacity-10 pointer-events-none"
         style={{
@@ -102,23 +225,51 @@ function App() {
         }}
       ></div>
 
-      <div className="w-full max-w-6xl mx-auto relative z-10">
+      <div className="w-full max-w-7xl mx-auto relative z-10">
         {appState === "LOGIN" && (
-          <AdminLogin onLoginSuccess={() => setAppState("SETUP")} />
+          <AdminLogin
+            onStationLogin={handleStationLogin}
+            onMasterLogin={handleMasterLogin}
+          />
         )}
-        {appState === "SETUP" && (
-          <AdminSetup
-            onSetupComplete={() => {
+
+        {appState === "WAITING" && (
+          <WaitingRoom
+            pcId={currentPcId}
+            onActivated={() => {
               setAppState("GAME");
               sessionStorage.setItem("dd_session_active", "true");
-              sessionStorage.removeItem("dd_q_index");
+              setIsLocked(false);
+            }}
+          />
+        )}
+
+        {appState === "MASTER" && (
+          <CentralAdminDashboard
+            onLogout={() => {
+              sessionStorage.removeItem("dd_mode");
+              setAppState("LOGIN");
             }}
           />
         )}
 
         {appState === "GAME" && (
           <>
-            {isLocked && (
+            {isResetPending && (
+              <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="game-card p-10 max-w-lg w-full text-center border-blue-500 animate-pulse">
+                  <h2 className="text-3xl font-game font-bold text-blue-400 mb-4">
+                    WAITING FOR ADMIN
+                  </h2>
+                  <p className="text-gray-300 font-mono mb-6">
+                    Reset request sent. Please wait for approval...
+                  </p>
+                  <Loader2 className="animate-spin w-12 h-12 text-blue-500 mx-auto" />
+                </div>
+              </div>
+            )}
+
+            {isLocked && !isResetPending && (
               <ResumeModal
                 onResume={() => {
                   setIsLocked(false);
@@ -127,18 +278,15 @@ function App() {
               />
             )}
 
-            {isDisqualified && (
-              <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-md">
+            {isDisqualified && !isResetPending && (
+              <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
                 <div className="game-card p-10 max-w-lg w-full text-center border-red-500">
                   <h1 className="text-5xl font-game font-bold text-red-500 mb-4 animate-bounce">
                     GAME OVER
                   </h1>
-                  <p className="text-gray-300 font-body text-xl mb-8">
-                    Time Limit Exceeded
-                  </p>
                   <button
                     onClick={() => window.location.reload()}
-                    className="btn-game w-full bg-red-600 shadow-[0_6px_0_#7f1d1d]"
+                    className="btn-game w-full bg-red-600"
                   >
                     Try Again
                   </button>
@@ -146,10 +294,11 @@ function App() {
               </div>
             )}
 
-            {!isLocked && !isDisqualified && (
+            {!isLocked && !isDisqualified && !isResetPending && (
               <>
                 {level === 1 && (
                   <Level1
+                    pcId={currentPcId}
                     onUnlock={() => {
                       setLevel(2);
                       setIsActive(true);
@@ -159,6 +308,7 @@ function App() {
                 )}
                 {level === 2 && (
                   <Level2
+                    pcId={currentPcId}
                     onSolve={() => {
                       setIsActive(false);
                       setLevel(3);
@@ -171,6 +321,7 @@ function App() {
                 )}
                 {level === 3 && (
                   <Level3
+                    pcId={currentPcId}
                     finalTime={formatTime()}
                     onAdminReset={handleAdminReset}
                   />

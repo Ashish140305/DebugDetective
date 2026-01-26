@@ -1,159 +1,100 @@
-import React, { useState } from "react";
-import {
-  Gamepad2,
-  Settings,
-  Timer,
-  ShieldAlert,
-  Lock,
-  PlayCircle,
-  Loader2,
-} from "lucide-react";
-import { account } from "../appwrite";
+import React from "react";
+import { Clock, AlertOctagon, Monitor, RotateCcw } from "lucide-react";
+import { requestGameReset } from "../appwrite";
 
-const DetectiveLayout = ({ children, title, timer, penalty, onAdminReset }) => {
-  const [showResetModal, setShowResetModal] = useState(false);
-  const [resetPassword, setResetPassword] = useState("");
-  const [resetError, setResetError] = useState(false);
-  const [verifying, setVerifying] = useState(false);
+const DetectiveLayout = ({
+  children,
+  title,
+  timer,
+  penalty,
+  onAdminReset,
+  pcId,
+}) => {
+  const handleNewGameRequest = async () => {
+    if (
+      window.confirm(
+        "REQUEST NEW GAME?\n\nThis will send a request to the Admin. The game will restart only after approval.",
+      )
+    ) {
+      const docId = localStorage.getItem("dd_doc_id");
 
-  const handleResetClick = () => {
-    setShowResetModal(true);
-    setResetPassword("");
-    setResetError(false);
-  };
-
-  const confirmReset = async (e) => {
-    e.preventDefault();
-    setResetError(false);
-    setVerifying(true);
-
-    const savedPassword = localStorage.getItem("dd_admin_auth_proof");
-    if (savedPassword && resetPassword === savedPassword) {
-      if (onAdminReset) onAdminReset();
-      setShowResetModal(false);
-      return;
-    }
-
-    // Fallback to appwrite check if local proof fails
-    const savedEmail = localStorage.getItem("dd_admin_email");
-    if (savedEmail) {
-      try {
-        await account.createEmailPasswordSession(savedEmail, resetPassword);
-        if (onAdminReset) onAdminReset();
-        setShowResetModal(false);
-      } catch (err) {
-        setResetError(true);
+      if (docId) {
+        try {
+          await requestGameReset(docId);
+          // Success!
+          localStorage.setItem("dd_reset_pending", "true");
+          window.location.reload();
+        } catch (error) {
+          console.error(error);
+          alert(
+            `Failed to send request. \nCheck Database Permissions for 'reset_requested'.\n\nError: ${error.message}`,
+          );
+        }
+      } else {
+        alert(
+          "Error: Game session ID not found. Please ask Admin to re-assign this PC.",
+        );
       }
-    } else {
-      setResetError(true);
     }
-    setVerifying(false);
   };
 
   return (
-    <div className="flex flex-col h-full min-h-[90vh]">
-      {/* RESET MODAL */}
-      {showResetModal && (
-        <div className="fixed inset-0 z-60 bg-black/80 flex items-center justify-center p-4">
-          <div className="game-card p-6 w-full max-w-sm animate-float">
-            <div className="flex justify-center mb-4 text-arcade-accent">
-              <Lock size={48} />
-            </div>
+    <div className="w-full min-h-[90vh] md:min-h-[95vh] bg-arcade-card border-2 border-arcade-secondary rounded-3xl relative overflow-hidden shadow-2xl flex flex-col">
+      <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-20 bg-[length:100%_4px,3px_100%]"></div>
 
-            <h3 className="text-2xl font-game font-bold text-center text-white mb-2">
-              Admin Zone
-            </h3>
-
-            <form onSubmit={confirmReset} className="space-y-4">
-              <input
-                type="password"
-                value={resetPassword}
-                onChange={(e) => setResetPassword(e.target.value)}
-                placeholder="Secret Passcode"
-                className="input-game text-center text-lg"
-                autoFocus
-              />
-
-              {resetError && (
-                <div className="bg-red-500/20 text-red-400 p-2 rounded text-center text-sm font-bold border border-red-500/50">
-                  Access Denied
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-3 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowResetModal(false)}
-                  className="btn-game-secondary text-sm py-2"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn-game text-sm py-2 flex items-center justify-center"
-                  disabled={verifying}
-                >
-                  {verifying ? <Loader2 className="animate-spin" /> : "Confirm"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* TOP HUD */}
-      <nav className="mb-6 flex flex-col md:flex-row items-center justify-between gap-4 bg-arcade-card p-4 rounded-2xl shadow-lg border-2 border-arcade-secondary">
+      {/* Header */}
+      <div className="bg-black/40 border-b border-arcade-secondary p-4 md:p-6 flex flex-col md:flex-row justify-between items-center gap-4 z-30">
         <div className="flex items-center gap-4">
-          <div className="bg-arcade-primary p-3 rounded-xl shadow-game-btn">
-            <Gamepad2 className="text-white" size={28} />
-          </div>
-          <div>
-            <h1 className="font-game font-bold text-2xl text-white leading-none tracking-wide">
-              DEBUG <span className="text-arcade-primary">QUEST</span>
-            </h1>
-            <p className="text-xs text-gray-400 font-bold tracking-wider">
-              LEVEL: {title}
-            </p>
-          </div>
+          <h1 className="text-2xl md:text-4xl font-game font-bold text-white text-shadow-neon">
+            {title}
+          </h1>
+          {pcId && (
+            <div className="bg-arcade-secondary/30 border border-arcade-primary/30 px-3 py-1 rounded-full text-sm font-mono text-arcade-primary flex items-center gap-2">
+              <Monitor size={16} /> {pcId}
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center gap-4 w-full md:w-auto justify-end">
+        <div className="flex items-center gap-4 md:gap-6">
           {penalty > 0 && (
-            <div className="flex items-center gap-1 bg-red-500/20 text-red-400 px-3 py-1 rounded-lg border border-red-500 font-bold animate-pulse">
-              <ShieldAlert size={16} /> -{penalty}s HP
+            <div className="flex items-center gap-2 text-red-500 font-bold animate-pulse text-lg">
+              <AlertOctagon size={24} /> -{penalty}s
             </div>
           )}
 
-          {timer && (
-            <div className="flex items-center gap-2 bg-black/40 px-4 py-2 rounded-xl border border-arcade-secondary">
-              <Timer className="text-arcade-accent" size={20} />
-              <span className="font-mono text-xl font-bold text-white tabular-nums">
-                {timer}
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-3 bg-black/50 px-6 py-3 rounded-xl border border-arcade-secondary shadow-[0_0_10px_rgba(76,201,240,0.2)]">
+            <Clock
+              className={`text-arcade-primary ${timer !== "∞" ? "animate-pulse-slow" : ""}`}
+              size={28}
+            />
+            <span className="font-mono text-3xl font-bold text-white tracking-widest">
+              {timer}
+            </span>
+          </div>
 
-          {onAdminReset && (
-            <button
-              onClick={handleResetClick}
-              className="p-2 bg-arcade-secondary rounded-lg hover:bg-opacity-80 transition-all text-gray-300"
-            >
-              <Settings size={20} />
-            </button>
-          )}
+          <button
+            onClick={handleNewGameRequest}
+            className="flex items-center gap-2 bg-blue-900/80 hover:bg-blue-700 text-white border border-blue-500 font-game px-4 py-3 rounded-xl transition-all shadow-[0_0_10px_rgba(59,130,246,0.4)] hover:shadow-[0_0_20px_rgba(59,130,246,0.6)]"
+            title="Request New Game"
+          >
+            <RotateCcw size={20} />
+            <span className="hidden md:inline">RESET</span>
+          </button>
         </div>
-      </nav>
+      </div>
 
-      {/* MAIN GAME BOARD */}
-      <main className="grow game-card p-6 md:p-10 relative">
-        {/* Decorative corner bolts */}
-        <div className="absolute top-4 left-4 w-3 h-3 rounded-full bg-gray-600 shadow-inner"></div>
-        <div className="absolute top-4 right-4 w-3 h-3 rounded-full bg-gray-600 shadow-inner"></div>
-        <div className="absolute bottom-4 left-4 w-3 h-3 rounded-full bg-gray-600 shadow-inner"></div>
-        <div className="absolute bottom-4 right-4 w-3 h-3 rounded-full bg-gray-600 shadow-inner"></div>
-
+      <div className="flex-1 p-4 md:p-10 overflow-y-auto relative z-30 custom-scrollbar flex flex-col">
         {children}
-      </main>
+      </div>
+
+      <div className="p-2 flex justify-end opacity-20 hover:opacity-100 transition-opacity z-30 absolute bottom-0 right-0">
+        <button
+          onClick={onAdminReset}
+          className="text-[10px] text-red-500 uppercase font-bold cursor-pointer px-2 py-1"
+        >
+          [ System Reset ]
+        </button>
+      </div>
     </div>
   );
 };
