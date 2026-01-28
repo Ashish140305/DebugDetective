@@ -29,22 +29,32 @@ export const verifyMasterPassword = async (password) => {
 
 // --- TEAM MANAGEMENT ---
 
+// Alias for Dashboard compatibility
+export const getActiveSessions = async () => {
+    return getAllTeams();
+};
+
 export const getAllTeams = async () => {
     try {
         const response = await databases.listDocuments(DB_ID, COLLECTION_ID, [
             Query.limit(100),
             Query.orderDesc('$createdAt')
         ]);
-        return response.documents.filter(doc => doc.pc_id !== 'MASTER_ACCESS');
+        return { documents: response.documents.filter(doc => doc.pc_id !== 'MASTER_ACCESS') };
     } catch (error) {
-        return [];
+        return { documents: [] };
     }
+};
+
+// Alias for Dashboard
+export const subscribeToAllSessions = (callback) => {
+    return subscribeToTeams(callback);
 };
 
 export const subscribeToTeams = (callback) => {
     return client.subscribe(
         `databases.${DB_ID}.collections.${COLLECTION_ID}.documents`,
-        (response) => { callback(response); }
+        (response) => { callback(response.payload); }
     );
 };
 
@@ -68,6 +78,8 @@ export const subscribeToSessionDeletion = (targetDocId, onDeleted) => {
     );
 };
 
+// --- SESSION CREATION & INIT (FIXED) ---
+
 export const createTeamSession = async (pcId, level1Password) => {
     return databases.createDocument(DB_ID, COLLECTION_ID, ID.unique(), {
         pc_id: pcId,
@@ -81,6 +93,35 @@ export const createTeamSession = async (pcId, level1Password) => {
         active_answer: level1Password,
         history_logs: "[]"
     });
+};
+
+// THIS WAS MISSING
+export const initializeGameSession = async (pcId) => {
+    try {
+        // 1. Check if session already exists
+        const existing = await getGameConfig(pcId);
+
+        if (existing) {
+            // Ensure it is active
+            if (!existing.is_active) {
+                await updateLiveGameStatus(existing.$id, { is_active: true });
+            }
+            return existing.$id;
+        }
+
+        // 2. Create new session if not found
+        // Default PIN "7749" used for auto-created sessions
+        const newSession = await createTeamSession(pcId, "7749");
+        return newSession.$id;
+    } catch (error) {
+        console.error("Session Init Error:", error);
+        return null;
+    }
+};
+
+// Alias for Dashboard
+export const deleteGameSession = async (docId) => {
+    return deleteTeam(docId);
 };
 
 export const deleteTeam = async (docId) => {
@@ -120,6 +161,11 @@ export const setTeamLockStatus = async (docId, isLocked) => {
     } catch (error) {
         console.error("Lock Update Error", error);
     }
+};
+
+// Alias for Dashboard
+export const updateTeamStatus = async (docId, updates) => {
+    return updateLiveGameStatus(docId, updates);
 };
 
 export const updateLiveGameStatus = async (docId, updates) => {

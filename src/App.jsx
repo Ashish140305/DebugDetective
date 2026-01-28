@@ -24,25 +24,28 @@ function App() {
     return saved ? parseInt(saved) : 1;
   });
 
-  const [isLocked, setIsLocked] = useState(false);
+  // Initialize lock state from storage to catch refreshes immediately
+  const [isLocked, setIsLocked] = useState(() => {
+    return localStorage.getItem("dd_trigger_lock_on_load") === "true";
+  });
+
   const [timeLeft, setTimeLeft] = useState(1500);
   const [isActive, setIsActive] = useState(false);
   const [penaltySeconds, setPenaltySeconds] = useState(0);
   const [isDisqualified, setIsDisqualified] = useState(false);
 
-  // RESET PENDING STATE
   const [isResetPending, setIsResetPending] = useState(() => {
     return localStorage.getItem("dd_reset_pending") === "true";
   });
 
-  // --- INITIAL CHECK: Are we stuck in "Waiting" state? ---
+  // --- SAFEGUARD: Prevent accidental resets ---
   useEffect(() => {
     const checkResetStatus = async () => {
       if (isResetPending) {
         const pcId = localStorage.getItem("dd_pc_id");
         if (pcId) {
           const conf = await getGameConfig(pcId);
-          // If Admin already approved it (reset_requested is false)
+          // Only reset if Admin EXPLICITLY approved the reset request
           if (conf && conf.reset_requested === false) {
             performLocalReset();
           }
@@ -52,11 +55,11 @@ function App() {
     checkResetStatus();
   }, [isResetPending]);
 
-  // Helper to clear everything and reload
   const performLocalReset = () => {
     localStorage.removeItem("dd_reset_pending");
     localStorage.removeItem("dd_trigger_lock_on_load");
     localStorage.removeItem("dd_q_index");
+    localStorage.removeItem("dd_l2_solved"); // Clear level 2 progress
     localStorage.removeItem("dd_timer_remaining");
     localStorage.removeItem("dd_level");
     window.location.reload();
@@ -67,7 +70,6 @@ function App() {
     const docId = localStorage.getItem("dd_doc_id");
 
     if ((appState === "GAME" || appState === "WAITING") && docId) {
-      // 1. Deletion
       const unsubDelete = subscribeToSessionDeletion(docId, () => {
         alert(
           "⚠️ SESSION TERMINATED \n\nAdministrator has removed this game session.",
@@ -75,12 +77,11 @@ function App() {
         handleAdminReset();
       });
 
-      // 2. Real-time Reset Approval
       const unsubUpdate = subscribeToTeamStatus(docId, (payload) => {
-        if (payload.reset_requested === false && payload.current_level === 1) {
-          if (isResetPending || level > 1) {
-            performLocalReset();
-          }
+        // FIXED: Removed the check "|| level > 1" which was causing random resets
+        // Now it strictly checks if we were waiting for a reset
+        if (payload.reset_requested === false && isResetPending) {
+          performLocalReset();
         }
       });
 
@@ -91,27 +92,29 @@ function App() {
     }
   }, [appState, isResetPending, level]);
 
-  // --- LOCK & UNLOAD LOGIC ---
+  // --- LOCK LOGIC ---
   useEffect(() => {
-    const wasRefreshed = localStorage.getItem("dd_trigger_lock_on_load");
+    const wasRefreshed =
+      localStorage.getItem("dd_trigger_lock_on_load") === "true";
     const isPendingLocal = localStorage.getItem("dd_reset_pending") === "true";
 
+    // Only set lock if not pending reset
     if (wasRefreshed && !isPendingLocal) {
-      if (appState === "GAME") {
-        setIsLocked(true);
-        const docId = localStorage.getItem("dd_doc_id");
-        if (docId) setTeamLockStatus(docId, true);
-      }
+      const docId = localStorage.getItem("dd_doc_id");
+      if (docId) setTeamLockStatus(docId, true);
     }
+    // Clear flag immediately so valid navigation doesn't lock
     localStorage.removeItem("dd_trigger_lock_on_load");
+  }, []);
 
+  useEffect(() => {
     const handleBeforeUnload = () => {
       const pending = localStorage.getItem("dd_reset_pending") === "true";
+      // Only set trigger if in GAME mode and not pending reset
       if (appState === "GAME" && level < 4 && !pending) {
         localStorage.setItem("dd_trigger_lock_on_load", "true");
       }
     };
-
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [appState, level]);
@@ -160,11 +163,12 @@ function App() {
     return () => clearInterval(countdownInterval);
   }, [isActive, timeLeft, isLocked, isResetPending]);
 
-  // Visibility Handler
+  // Visibility (Tab Switch) Handler
   useEffect(() => {
     const handleVisibilityChange = async () => {
       const isPendingLocal =
         localStorage.getItem("dd_reset_pending") === "true";
+      // Added appState === "GAME" check to ensure we don't lock during login/waiting
       if (
         document.hidden &&
         appState === "GAME" &&
@@ -232,7 +236,6 @@ function App() {
             onMasterLogin={handleMasterLogin}
           />
         )}
-
         {appState === "WAITING" && (
           <WaitingRoom
             pcId={currentPcId}
@@ -243,7 +246,6 @@ function App() {
             }}
           />
         )}
-
         {appState === "MASTER" && (
           <CentralAdminDashboard
             onLogout={() => {

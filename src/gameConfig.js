@@ -25,7 +25,7 @@ export const CONFIG = {
   // Level 2 Settings
   questionsToSolve: 10,
   incorrectPenalty: 30,
-  skipPenalty: 15,
+  skipPenalty: 10,
 
   // --- NEW: Security Settings ---
   refreshPenalty: 300, // Penalty (in seconds) for Refresh or Tab Switch
