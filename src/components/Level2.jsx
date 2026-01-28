@@ -16,6 +16,7 @@ import {
   updateTeamProgress,
   getGameConfig,
   updateLiveGameStatus,
+  subscribeToTeamStatus,
 } from "../appwrite";
 import { generateQuestions } from "../data/questionFactory";
 import { executeCode } from "../utils/codeExecutor";
@@ -49,13 +50,36 @@ const Level2 = ({
   const [feedbackMsg, setFeedbackMsg] = useState("");
   const textAreaRef = useRef(null);
 
-  // Sync with Admin
+  // UseRef to track the last skip request ID to prevent duplicate skips
+  const lastSkipIdRef = useRef(null);
+
+  // --- ADMIN REMOTE SKIP LISTENER ---
+  useEffect(() => {
+    const docId = localStorage.getItem("dd_doc_id");
+    if (!docId) return;
+
+    const unsub = subscribeToTeamStatus(docId, (payload) => {
+      // Check if a new skip request has come in
+      if (
+        payload.skip_request_id &&
+        payload.skip_request_id !== lastSkipIdRef.current
+      ) {
+        console.log("Admin Forced Skip Triggered");
+        lastSkipIdRef.current = payload.skip_request_id;
+        handleSkip(null, true); // Trigger skip (isAdmin = true)
+      }
+    });
+
+    return () => unsub();
+  }, [solvedCount]); // Added solvedCount dependency to ensure current state is used
+
+  // --- SYNC WITH ADMIN ---
   useEffect(() => {
     const docId = localStorage.getItem("dd_doc_id");
     if (docId) {
       updateLiveGameStatus(docId, {
         active_question: `L2 (${solvedCount}/${TARGET_SOLVED}): ${challenge.title} [${selectedLanguage}]`,
-        active_answer: challenge.languages[selectedLanguage].solutionCode,
+        active_answer: challenge.languages[selectedLanguage].fullCorrectCode,
       });
     }
   }, [challenge, selectedLanguage, solvedCount]);
@@ -111,29 +135,71 @@ const Level2 = ({
     }
   };
 
-  const handleSkip = (e) => {
-    e.preventDefault(); // Prevent accidental form submissions
-    onPenalty(CONFIG.skipPenalty || 10);
-    setFeedbackMsg("SKIPPED");
+  const handleSkip = (e, isAdminForced = false) => {
+    if (e) e.preventDefault();
 
-    const docId = localStorage.getItem("dd_doc_id");
-    if (docId) {
-      getGameConfig(pcId).then((doc) => {
-        const history = doc.history_logs ? JSON.parse(doc.history_logs) : [];
-        history.push({
-          question: challenge.title,
-          status: "SKIPPED",
-          time: new Date().toLocaleTimeString(),
+    let newSolvedCount = solvedCount;
+    setFeedbackMsg(isAdminForced ? "ADMIN SKIPPED" : "SKIPPED");
+
+    if (isAdminForced) {
+      // --- ADMIN SKIP LOGIC (Counts as Attempted/Solved) ---
+      newSolvedCount = solvedCount + 1;
+      setSolvedCount(newSolvedCount);
+
+      const docId = localStorage.getItem("dd_doc_id");
+      if (docId) {
+        // Log to history
+        getGameConfig(pcId).then((doc) => {
+          const history = doc.history_logs ? JSON.parse(doc.history_logs) : [];
+          history.push({
+            question: challenge.title,
+            status: "SKIPPED (ADMIN)",
+            time: new Date().toLocaleTimeString(),
+          });
+
+          const updates = { history_logs: JSON.stringify(history) };
+
+          // If level complete due to skip
+          if (newSolvedCount >= TARGET_SOLVED) {
+            updateTeamProgress(docId, 3, 0); // Move to Level 3
+          } else {
+            updates.questions_solved = newSolvedCount; // Sync progress
+            updateLiveGameStatus(docId, updates);
+          }
         });
-        updateLiveGameStatus(docId, { history_logs: JSON.stringify(history) });
-      });
+      }
+    } else {
+      // --- USER SKIP LOGIC (Penalty, No Progress Count) ---
+      onPenalty(CONFIG.skipPenalty || 10);
+
+      const docId = localStorage.getItem("dd_doc_id");
+      if (docId) {
+        getGameConfig(pcId).then((doc) => {
+          const history = doc.history_logs ? JSON.parse(doc.history_logs) : [];
+          history.push({
+            question: challenge.title,
+            status: "SKIPPED",
+            time: new Date().toLocaleTimeString(),
+          });
+          updateLiveGameStatus(docId, {
+            history_logs: JSON.stringify(history),
+          });
+        });
+      }
     }
 
+    // --- TRANSITION LOGIC ---
     // Fast transition (200ms)
     setTimeout(() => {
-      setCurrentLevelIdx(currentLevelIdx + 1);
-      setActiveTab("problem");
-      setFeedbackMsg("");
+      // If Admin skip caused completion, trigger solve
+      if (isAdminForced && newSolvedCount >= TARGET_SOLVED) {
+        onSolve();
+      } else {
+        // Otherwise just next question
+        setCurrentLevelIdx((prev) => prev + 1);
+        setActiveTab("problem");
+        setFeedbackMsg("");
+      }
     }, 200);
   };
 
@@ -145,19 +211,41 @@ const Level2 = ({
 
     const langData = challenge.languages[selectedLanguage];
     let fullSource = "";
+    let isFullProgram = false;
 
-    if (selectedLanguage === "cpp" || selectedLanguage === "java") {
-      const placeholder =
-        selectedLanguage === "java"
-          ? "// Insert User Code Here"
-          : "// Insert User Code Class Here";
-      if (langData.driverCode.includes(placeholder)) {
-        fullSource = langData.driverCode.replace(placeholder, userCode);
+    // --- DETECT FULL PROGRAM SUBMISSION ---
+    if (selectedLanguage === "python" && !userCode.includes("def solve")) {
+      isFullProgram = true;
+    } else if (
+      selectedLanguage === "javascript" &&
+      !/(function|const|let|var)\s+solve/.test(userCode)
+    ) {
+      isFullProgram = true;
+    } else if (selectedLanguage === "cpp" && userCode.includes("int main")) {
+      isFullProgram = true;
+    } else if (
+      selectedLanguage === "java" &&
+      userCode.includes("public static void main")
+    ) {
+      isFullProgram = true;
+    }
+
+    if (isFullProgram) {
+      fullSource = userCode;
+    } else {
+      if (selectedLanguage === "cpp" || selectedLanguage === "java") {
+        const placeholder =
+          selectedLanguage === "java"
+            ? "// Insert User Code Here"
+            : "// Insert User Code Class Here";
+        if (langData.driverCode.includes(placeholder)) {
+          fullSource = langData.driverCode.replace(placeholder, userCode);
+        } else {
+          fullSource = userCode + "\n" + langData.driverCode;
+        }
       } else {
         fullSource = userCode + "\n" + langData.driverCode;
       }
-    } else {
-      fullSource = userCode + "\n" + langData.driverCode;
     }
 
     const casesToRun = runAll
@@ -216,12 +304,11 @@ const Level2 = ({
         });
       }
 
-      // Very fast transition
       setTimeout(() => {
         if (newSolvedCount >= TARGET_SOLVED) {
           onSolve();
         } else {
-          setCurrentLevelIdx(currentLevelIdx + 1);
+          setCurrentLevelIdx((prev) => prev + 1);
           setActiveTab("problem");
           setFeedbackMsg("");
         }
@@ -372,9 +459,9 @@ const Level2 = ({
                     PASSED
                   </div>
                 )}
-                {feedbackMsg === "SKIPPED" && (
+                {feedbackMsg.includes("SKIPPED") && (
                   <div className="text-yellow-400 font-bold text-center border border-yellow-500 p-2 rounded bg-yellow-900/20">
-                    SKIPPING...
+                    {feedbackMsg}...
                   </div>
                 )}
               </div>
@@ -390,7 +477,6 @@ const Level2 = ({
                 <Code2 size={18} />
                 <span className="font-mono text-sm font-bold">Solution</span>
               </div>
-              {/* FIXED: Padding Added to prevent Icon overlap */}
               <div className="relative group">
                 <select
                   value={selectedLanguage}
@@ -424,7 +510,7 @@ const Level2 = ({
 
           <div className="flex gap-4">
             <button
-              onClick={handleSkip}
+              onClick={(e) => handleSkip(e)}
               disabled={isRunning}
               className="w-16 bg-gray-800 hover:bg-gray-700 text-yellow-500 border border-gray-600 font-game font-bold rounded-xl flex justify-center items-center transition-all"
               title={`Skip Question (-${CONFIG.skipPenalty}s)`}

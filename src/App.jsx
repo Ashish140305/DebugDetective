@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import AdminLogin from "./components/AdminLogin";
 import CentralAdminDashboard from "./components/CentralAdminDashboard";
 import WaitingRoom from "./components/WaitingRoom";
@@ -19,6 +19,9 @@ function App() {
   const [appState, setAppState] = useState("LOGIN");
   const [currentPcId, setCurrentPcId] = useState("");
 
+  // FIX: Use a Ref to track intentional reloads vs accidental refreshes
+  const isSafeExit = useRef(false);
+
   const [level, setLevel] = useState(() => {
     const saved = localStorage.getItem("dd_level");
     return saved ? parseInt(saved) : 1;
@@ -30,13 +33,23 @@ function App() {
   });
 
   const [timeLeft, setTimeLeft] = useState(1500);
-  const [isActive, setIsActive] = useState(false);
+
+  // Initialize isActive from storage so it persists across refreshes
+  const [isActive, setIsActive] = useState(() => {
+    return localStorage.getItem("dd_timer_active") === "true";
+  });
+
   const [penaltySeconds, setPenaltySeconds] = useState(0);
   const [isDisqualified, setIsDisqualified] = useState(false);
 
   const [isResetPending, setIsResetPending] = useState(() => {
     return localStorage.getItem("dd_reset_pending") === "true";
   });
+
+  // Persist isActive state whenever it changes
+  useEffect(() => {
+    localStorage.setItem("dd_timer_active", isActive);
+  }, [isActive]);
 
   // --- SAFEGUARD: Prevent accidental resets ---
   useEffect(() => {
@@ -56,11 +69,13 @@ function App() {
   }, [isResetPending]);
 
   const performLocalReset = () => {
+    isSafeExit.current = true; // Prevent lock on reload
     localStorage.removeItem("dd_reset_pending");
     localStorage.removeItem("dd_trigger_lock_on_load");
     localStorage.removeItem("dd_q_index");
     localStorage.removeItem("dd_l2_solved"); // Clear level 2 progress
     localStorage.removeItem("dd_timer_remaining");
+    localStorage.removeItem("dd_timer_active"); // Clear timer active state
     localStorage.removeItem("dd_level");
     window.location.reload();
   };
@@ -78,8 +93,7 @@ function App() {
       });
 
       const unsubUpdate = subscribeToTeamStatus(docId, (payload) => {
-        // FIXED: Removed the check "|| level > 1" which was causing random resets
-        // Now it strictly checks if we were waiting for a reset
+        // Strictly checks if we were waiting for a reset
         if (payload.reset_requested === false && isResetPending) {
           performLocalReset();
         }
@@ -109,6 +123,9 @@ function App() {
 
   useEffect(() => {
     const handleBeforeUnload = () => {
+      // FIX: If this is a safe exit (reset/restart), do not trigger lock
+      if (isSafeExit.current) return;
+
       const pending = localStorage.getItem("dd_reset_pending") === "true";
       // Only set trigger if in GAME mode and not pending reset
       if (appState === "GAME" && level < 4 && !pending) {
@@ -168,13 +185,15 @@ function App() {
     const handleVisibilityChange = async () => {
       const isPendingLocal =
         localStorage.getItem("dd_reset_pending") === "true";
-      // Added appState === "GAME" check to ensure we don't lock during login/waiting
+
+      // Ensure we don't lock if it's a safe exit or disqualified
       if (
         document.hidden &&
         appState === "GAME" &&
         !isDisqualified &&
         !isLocked &&
-        !isPendingLocal
+        !isPendingLocal &&
+        !isSafeExit.current
       ) {
         setIsLocked(true);
         const docId = localStorage.getItem("dd_doc_id");
@@ -214,6 +233,7 @@ function App() {
   };
 
   const handleAdminReset = () => {
+    isSafeExit.current = true; // Prevent lock on reload
     localStorage.clear();
     sessionStorage.clear();
     window.location.reload();
@@ -287,7 +307,11 @@ function App() {
                     GAME OVER
                   </h1>
                   <button
-                    onClick={() => window.location.reload()}
+                    onClick={() => {
+                      // FIX: Mark as safe exit to avoid locking on restart
+                      isSafeExit.current = true;
+                      window.location.reload();
+                    }}
                     className="btn-game w-full bg-red-600"
                   >
                     Try Again

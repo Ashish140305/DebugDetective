@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Eye,
   X,
+  SkipForward,
 } from "lucide-react";
 import {
   getAllTeams,
@@ -18,6 +19,7 @@ import {
   subscribeToTeams,
   setTeamLockStatus,
   approveGameReset,
+  triggerRemoteSkip,
 } from "../appwrite";
 
 const CentralAdminDashboard = ({ onLogout }) => {
@@ -68,6 +70,17 @@ const CentralAdminDashboard = ({ onLogout }) => {
   const handleApproveReset = async (team) => {
     if (window.confirm(`Approve Game Reset for ${team.pc_id}?`)) {
       await approveGameReset(team.$id, team.pc_id, team.level1_password);
+    }
+  };
+
+  const handleForceSkip = async (docId) => {
+    if (window.confirm("Force this team to SKIP the current question?")) {
+      try {
+        await triggerRemoteSkip(docId);
+        alert("Skip command sent.");
+      } catch (error) {
+        alert("Error sending skip command: " + error.message);
+      }
     }
   };
 
@@ -247,12 +260,22 @@ const CentralAdminDashboard = ({ onLogout }) => {
                 </div>
 
                 <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
-                  <p className="text-xs text-gray-500 uppercase font-bold mb-2">
-                    Expected Answer
-                  </p>
-                  <p className="text-xl text-arcade-success font-mono font-bold">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-xs text-gray-500 uppercase font-bold">
+                      Expected Answer
+                    </p>
+                    {/* NEW: Force Skip Button */}
+                    <button
+                      onClick={() => handleForceSkip(activeTeam.$id)}
+                      className="bg-red-900/50 hover:bg-red-600 text-red-200 hover:text-white text-xs px-2 py-1 rounded border border-red-500/50 flex items-center gap-1 transition-all"
+                      title="Force user to skip this question"
+                    >
+                      <SkipForward size={12} /> FORCE SKIP
+                    </button>
+                  </div>
+                  <pre className="text-xs text-arcade-success font-mono font-bold whitespace-pre-wrap max-h-40 overflow-y-auto custom-scrollbar">
                     {activeTeam.active_answer || "---"}
-                  </p>
+                  </pre>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

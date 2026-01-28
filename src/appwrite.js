@@ -177,6 +177,14 @@ export const updateLiveGameStatus = async (docId, updates) => {
     }
 };
 
+// --- SKIP LOGIC (NEW) ---
+export const triggerRemoteSkip = async (docId) => {
+    if (!docId) return;
+    return databases.updateDocument(DB_ID, COLLECTION_ID, docId, {
+        skip_request_id: ID.unique() // Using ID.unique() guarantees a change event
+    });
+};
+
 // --- RESET LOGIC ---
 
 export const requestGameReset = async (docId) => {
@@ -195,6 +203,7 @@ export const approveGameReset = async (docId, pcId, level1Pass) => {
         is_locked: false,
         active_question: "Game Reset - Level 1",
         active_answer: level1Pass || "Unknown",
-        history_logs: "[]"
+        history_logs: "[]",
+        skip_request_id: null // Reset skip trigger
     });
 };
