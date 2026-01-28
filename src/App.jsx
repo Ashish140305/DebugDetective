@@ -112,8 +112,8 @@ function App() {
       localStorage.getItem("dd_trigger_lock_on_load") === "true";
     const isPendingLocal = localStorage.getItem("dd_reset_pending") === "true";
 
-    // Only set lock if not pending reset
-    if (wasRefreshed && !isPendingLocal) {
+    // Only set lock if not pending reset AND NOT Level 3 (Game Completed)
+    if (wasRefreshed && !isPendingLocal && level < 3) {
       const docId = localStorage.getItem("dd_doc_id");
       if (docId) setTeamLockStatus(docId, true);
     }
@@ -127,8 +127,8 @@ function App() {
       if (isSafeExit.current) return;
 
       const pending = localStorage.getItem("dd_reset_pending") === "true";
-      // Only set trigger if in GAME mode and not pending reset
-      if (appState === "GAME" && level < 4 && !pending) {
+      // Only set trigger if in GAME mode, not pending reset, AND level is LESS than 3
+      if (appState === "GAME" && level < 3 && !pending) {
         localStorage.setItem("dd_trigger_lock_on_load", "true");
       }
     };
@@ -169,16 +169,17 @@ function App() {
 
   useEffect(() => {
     let countdownInterval = null;
-    if (isActive && timeLeft > 0 && !isLocked && !isResetPending) {
+    // Timer only runs if Active, Time > 0, Not Locked, Not Pending Reset, AND Not Completed (Level < 3)
+    if (isActive && timeLeft > 0 && !isLocked && !isResetPending && level < 3) {
       countdownInterval = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
-    } else if (timeLeft <= 0 && isActive) {
+    } else if (timeLeft <= 0 && isActive && level < 3) {
       setIsDisqualified(true);
       setIsActive(false);
     }
     return () => clearInterval(countdownInterval);
-  }, [isActive, timeLeft, isLocked, isResetPending]);
+  }, [isActive, timeLeft, isLocked, isResetPending, level]);
 
   // Visibility (Tab Switch) Handler
   useEffect(() => {
@@ -186,14 +187,14 @@ function App() {
       const isPendingLocal =
         localStorage.getItem("dd_reset_pending") === "true";
 
-      // Ensure we don't lock if it's a safe exit or disqualified
       if (
         document.hidden &&
         appState === "GAME" &&
         !isDisqualified &&
         !isLocked &&
         !isPendingLocal &&
-        !isSafeExit.current
+        !isSafeExit.current &&
+        level < 3 // DISABLE LOCKS ON LEVEL 3
       ) {
         setIsLocked(true);
         const docId = localStorage.getItem("dd_doc_id");
@@ -204,7 +205,7 @@ function App() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [appState, isDisqualified, isLocked]);
+  }, [appState, isDisqualified, isLocked, level]);
 
   const handleStationLogin = (pcId) => {
     setCurrentPcId(pcId);
@@ -229,6 +230,17 @@ function App() {
       .toString()
       .padStart(2, "0");
     const secs = (timeLeft % 60).toString().padStart(2, "0");
+    return `${mins}:${secs}`;
+  };
+
+  // NEW: Calculate Total Time Taken (Total - Remaining)
+  const calculateTimeTaken = () => {
+    const totalTime = 1500; // Matches initial state
+    const timeTaken = Math.max(0, totalTime - timeLeft);
+    const mins = Math.floor(timeTaken / 60)
+      .toString()
+      .padStart(2, "0");
+    const secs = (timeTaken % 60).toString().padStart(2, "0");
     return `${mins}:${secs}`;
   };
 
@@ -291,7 +303,7 @@ function App() {
               </div>
             )}
 
-            {isLocked && !isResetPending && (
+            {isLocked && !isResetPending && level < 3 && (
               <ResumeModal
                 onResume={() => {
                   setIsLocked(false);
@@ -340,6 +352,7 @@ function App() {
                       setLevel(3);
                     }}
                     timerDisplay={formatTime()}
+                    timeLeft={timeLeft}
                     onPenalty={handlePenalty}
                     onPenaltyAmount={penaltySeconds}
                     onAdminReset={handleAdminReset}
@@ -348,7 +361,7 @@ function App() {
                 {level === 3 && (
                   <Level3
                     pcId={currentPcId}
-                    finalTime={formatTime()}
+                    finalTime={calculateTimeTaken()} // UPDATED: Pass Time Taken
                     onAdminReset={handleAdminReset}
                   />
                 )}

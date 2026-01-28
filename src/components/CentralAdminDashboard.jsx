@@ -11,6 +11,7 @@ import {
   Eye,
   X,
   SkipForward,
+  Clock,
 } from "lucide-react";
 import {
   getAllTeams,
@@ -199,6 +200,16 @@ const CentralAdminDashboard = ({ onLogout }) => {
               </div>
             )}
 
+            {/* Time Taken Badge in Grid Card */}
+            {team.level2_completion_time && (
+              <div className="mb-4 bg-yellow-900/20 border border-yellow-500/30 p-2 rounded flex items-center gap-2 justify-center">
+                <Clock size={14} className="text-yellow-500" />
+                <span className="text-yellow-200 text-xs font-bold">
+                  TIME: {team.level2_completion_time}
+                </span>
+              </div>
+            )}
+
             <div className="bg-black/30 p-3 rounded-lg flex justify-between items-center text-xs text-gray-400">
               <span>
                 Solved:{" "}
@@ -214,7 +225,7 @@ const CentralAdminDashboard = ({ onLogout }) => {
         ))}
       </div>
 
-      {/* TEAM DETAIL MODAL - Uses activeTeam derived state */}
+      {/* TEAM DETAIL MODAL */}
       {activeTeam && (
         <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
           <div className="game-card w-full max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden border-arcade-primary">
@@ -246,54 +257,96 @@ const CentralAdminDashboard = ({ onLogout }) => {
             <div className="p-8 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* LEFT: Live State */}
               <div className="space-y-6">
-                <h3 className="text-xl font-game text-arcade-accent uppercase tracking-widest border-b border-gray-700 pb-2">
-                  Active Challenge
-                </h3>
+                {activeTeam.level2_completion_time ? (
+                  // --- COMPLETED STATE: Show ONLY Time ---
+                  <div className="flex flex-col items-center justify-center h-full space-y-8 animate-fade-in py-10">
+                    <div className="bg-yellow-900/10 border-2 border-yellow-500/50 p-8 rounded-2xl shadow-[0_0_30px_rgba(234,179,8,0.1)] text-center w-full transform hover:scale-105 transition-transform">
+                      <Clock
+                        size={48}
+                        className="text-yellow-500 mx-auto mb-4 animate-pulse"
+                      />
+                      <p className="text-sm text-yellow-500 font-bold uppercase tracking-widest mb-2">
+                        Level 2 Completed In
+                      </p>
+                      <p className="text-6xl font-mono font-bold text-white drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]">
+                        {activeTeam.level2_completion_time}
+                      </p>
+                    </div>
 
-                <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700 transition-all">
-                  <p className="text-xs text-gray-500 uppercase font-bold mb-2">
-                    Current Question
-                  </p>
-                  <p className="text-lg text-white font-mono leading-relaxed animate-fade-in">
-                    {activeTeam.active_question || "Waiting for level start..."}
-                  </p>
-                </div>
+                    <div className="grid grid-cols-2 gap-4 w-full">
+                      <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-900/50 text-center opacity-70">
+                        <p className="text-2xl font-bold text-white">
+                          {activeTeam.current_level}
+                        </p>
+                        <p className="text-xs text-blue-300 uppercase">
+                          Current Level
+                        </p>
+                      </div>
+                      <div className="bg-green-900/20 p-4 rounded-lg border border-green-900/50 text-center opacity-70">
+                        <p className="text-2xl font-bold text-white">
+                          {activeTeam.questions_solved}
+                        </p>
+                        <p className="text-xs text-green-300 uppercase">
+                          Solved
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // --- ACTIVE STATE: Show Questions ---
+                  <>
+                    <h3 className="text-xl font-game text-arcade-accent uppercase tracking-widest border-b border-gray-700 pb-2">
+                      Active Challenge
+                    </h3>
 
-                <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
-                  <div className="flex justify-between items-center mb-2">
-                    <p className="text-xs text-gray-500 uppercase font-bold">
-                      Expected Answer
-                    </p>
-                    {/* NEW: Force Skip Button */}
-                    <button
-                      onClick={() => handleForceSkip(activeTeam.$id)}
-                      className="bg-red-900/50 hover:bg-red-600 text-red-200 hover:text-white text-xs px-2 py-1 rounded border border-red-500/50 flex items-center gap-1 transition-all"
-                      title="Force user to skip this question"
-                    >
-                      <SkipForward size={12} /> FORCE SKIP
-                    </button>
-                  </div>
-                  <pre className="text-xs text-arcade-success font-mono font-bold whitespace-pre-wrap max-h-40 overflow-y-auto custom-scrollbar">
-                    {activeTeam.active_answer || "---"}
-                  </pre>
-                </div>
+                    <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700 transition-all">
+                      <p className="text-xs text-gray-500 uppercase font-bold mb-2">
+                        Current Question
+                      </p>
+                      <p className="text-lg text-white font-mono leading-relaxed animate-fade-in">
+                        {activeTeam.active_question ||
+                          "Waiting for level start..."}
+                      </p>
+                    </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-900/50 text-center">
-                    <p className="text-2xl font-bold text-white">
-                      {activeTeam.current_level}
-                    </p>
-                    <p className="text-xs text-blue-300 uppercase">
-                      Current Level
-                    </p>
-                  </div>
-                  <div className="bg-green-900/20 p-4 rounded-lg border border-green-900/50 text-center">
-                    <p className="text-2xl font-bold text-white">
-                      {activeTeam.questions_solved}
-                    </p>
-                    <p className="text-xs text-green-300 uppercase">Solved</p>
-                  </div>
-                </div>
+                    <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="text-xs text-gray-500 uppercase font-bold">
+                          Expected Answer
+                        </p>
+                        <button
+                          onClick={() => handleForceSkip(activeTeam.$id)}
+                          className="bg-red-900/50 hover:bg-red-600 text-red-200 hover:text-white text-xs px-2 py-1 rounded border border-red-500/50 flex items-center gap-1 transition-all"
+                          title="Force user to skip this question"
+                        >
+                          <SkipForward size={12} /> FORCE SKIP
+                        </button>
+                      </div>
+                      <pre className="text-xs text-arcade-success font-mono font-bold whitespace-pre-wrap max-h-40 overflow-y-auto custom-scrollbar">
+                        {activeTeam.active_answer || "---"}
+                      </pre>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-900/50 text-center">
+                        <p className="text-2xl font-bold text-white">
+                          {activeTeam.current_level}
+                        </p>
+                        <p className="text-xs text-blue-300 uppercase">
+                          Current Level
+                        </p>
+                      </div>
+                      <div className="bg-green-900/20 p-4 rounded-lg border border-green-900/50 text-center">
+                        <p className="text-2xl font-bold text-white">
+                          {activeTeam.questions_solved}
+                        </p>
+                        <p className="text-xs text-green-300 uppercase">
+                          Solved
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* RIGHT: History Log */}
@@ -316,7 +369,7 @@ const CentralAdminDashboard = ({ onLogout }) => {
                         >
                           <div className="flex justify-between items-center mb-1">
                             <span
-                              className={`text-xs font-bold px-2 py-0.5 rounded ${log.status === "SOLVED" ? "bg-green-900 text-green-400" : log.status === "SKIPPED" ? "bg-yellow-900 text-yellow-400" : "bg-red-900 text-red-400"}`}
+                              className={`text-xs font-bold px-2 py-0.5 rounded ${log.status === "SOLVED" ? "bg-green-900 text-green-400" : log.status === "SKIPPED" || log.status.includes("SKIPPED") ? "bg-yellow-900 text-yellow-400" : "bg-red-900 text-red-400"}`}
                             >
                               {log.status}
                             </span>

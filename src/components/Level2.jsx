@@ -24,10 +24,12 @@ import { executeCode } from "../utils/codeExecutor";
 // Generate 150 Unique Questions
 const QUESTIONS = generateQuestions(150);
 const TARGET_SOLVED = 10;
+const INITIAL_TIME = 1500; // Matches App.jsx
 
 const Level2 = ({
   onSolve,
   timerDisplay,
+  timeLeft, // NEW PROP
   onPenalty,
   onPenaltyAmount,
   onAdminReset,
@@ -135,6 +137,15 @@ const Level2 = ({
     }
   };
 
+  const calculateTimeTaken = () => {
+    const timeTaken = INITIAL_TIME - timeLeft;
+    const mins = Math.floor(timeTaken / 60)
+      .toString()
+      .padStart(2, "0");
+    const secs = (timeTaken % 60).toString().padStart(2, "0");
+    return `${mins}:${secs}`;
+  };
+
   const handleSkip = (e, isAdminForced = false) => {
     if (e) e.preventDefault();
 
@@ -161,6 +172,9 @@ const Level2 = ({
 
           // If level complete due to skip
           if (newSolvedCount >= TARGET_SOLVED) {
+            const finalTime = calculateTimeTaken();
+            updates.level2_completion_time = finalTime; // SAVE TIME
+            updateLiveGameStatus(docId, updates);
             updateTeamProgress(docId, 3, 0); // Move to Level 3
           } else {
             updates.questions_solved = newSolvedCount; // Sync progress
@@ -297,10 +311,18 @@ const Level2 = ({
             total_solved: newSolvedCount,
             time: new Date().toLocaleTimeString(),
           });
-          updateLiveGameStatus(docId, {
-            history_logs: JSON.stringify(history),
-          });
-          if (newSolvedCount >= TARGET_SOLVED) updateTeamProgress(docId, 3, 0);
+
+          const updates = { history_logs: JSON.stringify(history) };
+
+          // --- LEVEL COMPLETE LOGIC ---
+          if (newSolvedCount >= TARGET_SOLVED) {
+            const finalTime = calculateTimeTaken();
+            updates.level2_completion_time = finalTime; // SAVE TIME
+            updateLiveGameStatus(docId, updates);
+            updateTeamProgress(docId, 3, 0);
+          } else {
+            updateLiveGameStatus(docId, updates);
+          }
         });
       }
 
