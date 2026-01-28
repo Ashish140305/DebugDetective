@@ -33,7 +33,7 @@ const CentralAdminDashboard = ({ onLogout }) => {
 
   const fetchTeams = async () => {
     const data = await getAllTeams();
-    setTeams(data);
+    setTeams(data.documents || []);
   };
 
   useEffect(() => {
