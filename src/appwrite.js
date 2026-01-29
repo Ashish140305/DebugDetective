@@ -1,16 +1,18 @@
 import { Client, Account, Databases, Query, ID } from 'appwrite';
 
+import { Client, Account, Databases } from "appwrite";
+
 const client = new Client();
 
 client
-    .setEndpoint('https://nyc.cloud.appwrite.io/v1')
-    .setProject('695bd8e00034c34f602c');
+    .setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT)
+    .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
 
 export const account = new Account(client);
 export const databases = new Databases(client);
 
-export const DB_ID = '695bd96f000a0aeb2e05';
-export const COLLECTION_ID = 'gameconfig';
+export const DB_ID = import.meta.env.VITE_APPWRITE_DB_ID;
+export const COLLECTION_ID = import.meta.env.VITE_APPWRITE_COLLECTION_ID;
 
 // --- AUTH ---
 export const verifyMasterPassword = async (password) => {
